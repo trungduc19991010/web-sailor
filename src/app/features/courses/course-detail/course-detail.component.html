@@ -1,0 +1,309 @@
+<!-- Course Detail Page -->
+<div class="course-detail-container">
+  <!-- Loading spinner -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Đang tải thông tin khóa học...</p>
+  </div>
+
+  <!-- Course content -->
+  <div class="course-detail-content" *ngIf="!loading && course">
+    <div class="container">
+      
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <button mat-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Quay lại danh sách
+        </button>
+      </div>
+
+      <!-- Course header -->
+      <div class="course-header">
+        <div class="course-header-content">
+          <div class="course-image">
+            <img [src]="course.imageUrl || 'assets/images/default-course.jpg'" 
+                 [alt]="course.title"
+                 onerror="this.src='assets/images/default-course.jpg'">
+            
+            <!-- Status badge -->
+            <div class="status-badge" [ngClass]="'status-' + course.status">
+              {{ getStatusDisplayText(course.status) }}
+            </div>
+          </div>
+
+          <div class="course-info">
+            <div class="course-meta">
+              <span class="category">{{ course.category }}</span>
+              <span class="level" [style.color]="getLevelColor(course.level)">
+                {{ getLevelDisplayText(course.level) }}
+              </span>
+            </div>
+
+            <h1>{{ course.title }}</h1>
+            <p class="course-description">{{ course.description }}</p>
+
+            <div class="course-stats">
+              <div class="stat-item">
+                <mat-icon>person</mat-icon>
+                <span>{{ course.instructor }}</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ formatDuration(course.duration) }}</span>
+              </div>
+              <div class="stat-item" *ngIf="course.studentsCount">
+                <mat-icon>group</mat-icon>
+                <span>{{ course.studentsCount }} học viên</span>
+              </div>
+              <div class="stat-item" *ngIf="course.rating">
+                <mat-icon>star</mat-icon>
+                <span>{{ course.rating }}/5 ({{ course.reviewsCount || 0 }})</span>
+              </div>
+            </div>
+
+            <!-- Price and enrollment -->
+            <div class="enrollment-section">
+              <div class="price-info">
+                <span class="price">{{ formatPrice(course.price) }}</span>
+              </div>
+              
+              <div class="enrollment-actions">
+                <button mat-raised-button 
+                        color="primary" 
+                        [disabled]="course.status !== 'PUBLISHED' || enrolling"
+                        (click)="enrollCourse()">
+                  <mat-spinner diameter="20" *ngIf="enrolling"></mat-spinner>
+                  <mat-icon *ngIf="!enrolling">school</mat-icon>
+                  {{ enrolling ? 'Đang đăng ký...' : 'Đăng ký khóa học' }}
+                </button>
+                
+                <button mat-button (click)="shareCourse()">
+                  <mat-icon>share</mat-icon>
+                  Chia sẻ
+                </button>
+              </div>
+            </div>
+
+            <!-- User progress (if logged in and enrolled) -->
+            <div class="progress-section" *ngIf="isLoggedIn && userProgress > 0">
+              <h3>Tiến độ học tập</h3>
+              <mat-progress-bar mode="determinate" [value]="userProgress"></mat-progress-bar>
+              <span class="progress-text">{{ userProgress }}% hoàn thành</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course content tabs -->
+      <div class="course-content-tabs">
+        <mat-tab-group>
+          
+          <!-- Overview tab -->
+          <mat-tab label="Tổng quan">
+            <div class="tab-content">
+              <div class="overview-grid">
+                
+                <!-- Course details -->
+                <mat-card class="details-card">
+                  <mat-card-header>
+                    <mat-card-title>Thông tin khóa học</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="detail-list">
+                      <div class="detail-item">
+                        <strong>Giảng viên:</strong>
+                        <span>{{ course.instructor }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <strong>Thời lượng:</strong>
+                        <span>{{ formatDuration(course.duration) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <strong>Cấp độ:</strong>
+                        <span [style.color]="getLevelColor(course.level)">
+                          {{ getLevelDisplayText(course.level) }}
+                        </span>
+                      </div>
+                      <div class="detail-item">
+                        <strong>Ngày tạo:</strong>
+                        <span>{{ course.createdAt | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="course.updatedAt">
+                        <strong>Cập nhật:</strong>
+                        <span>{{ course.updatedAt | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Prerequisites -->
+                <mat-card class="prerequisites-card" *ngIf="course.prerequisites && course.prerequisites.length > 0">
+                  <mat-card-header>
+                    <mat-card-title>Yêu cầu trước khi học</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <ul>
+                      <li *ngFor="let prerequisite of course.prerequisites">
+                        {{ prerequisite }}
+                      </li>
+                    </ul>
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Learning outcomes -->
+                <mat-card class="outcomes-card" *ngIf="course.learningOutcomes && course.learningOutcomes.length > 0">
+                  <mat-card-header>
+                    <mat-card-title>Kết quả học tập</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <ul>
+                      <li *ngFor="let outcome of course.learningOutcomes">
+                        {{ outcome }}
+                      </li>
+                    </ul>
+                  </mat-card-content>
+                </mat-card>
+
+                <!-- Tags -->
+                <mat-card class="tags-card" *ngIf="course.tags && course.tags.length > 0">
+                  <mat-card-header>
+                    <mat-card-title>Từ khóa</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let tag of course.tags">
+                        {{ tag }}
+                      </mat-chip>
+                    </mat-chip-set>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Curriculum tab -->
+          <mat-tab label="Chương trình học">
+            <div class="tab-content">
+              <div class="curriculum-content">
+                
+                <!-- Login required message -->
+                <div class="login-required" *ngIf="!canAccessContent()">
+                  <mat-card class="warning-card">
+                    <mat-card-content>
+                      <div class="warning-content">
+                        <mat-icon>lock</mat-icon>
+                        <h3>Yêu cầu đăng nhập</h3>
+                        <p>Vui lòng đăng nhập để xem nội dung chi tiết của khóa học</p>
+                        <button mat-raised-button color="primary" (click)="enrollCourse()">
+                          Đăng nhập ngay
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+
+                <!-- Syllabus content -->
+                <div class="syllabus-content" *ngIf="canAccessContent() && course.syllabus">
+                  <mat-accordion>
+                    <mat-expansion-panel *ngFor="let section of course.syllabus">
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          {{ section.title }}
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          {{ formatDuration(section.duration) }} • {{ section.lessons.length }} bài học
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <div class="section-content">
+                        <p class="section-description">{{ section.description }}</p>
+                        
+                        <div class="lessons-list">
+                          <div class="lesson-item" 
+                               *ngFor="let lesson of section.lessons"
+                               [class.completed]="isLessonCompleted(lesson.id)">
+                            
+                            <div class="lesson-info">
+                              <div class="lesson-icon">
+                                <mat-icon *ngIf="lesson.type === 'video'">play_circle</mat-icon>
+                                <mat-icon *ngIf="lesson.type === 'document'">description</mat-icon>
+                                <mat-icon *ngIf="lesson.type === 'quiz'">quiz</mat-icon>
+                                <mat-icon *ngIf="lesson.type === 'assignment'">assignment</mat-icon>
+                              </div>
+                              
+                              <div class="lesson-details">
+                                <h4>{{ lesson.title }}</h4>
+                                <p>{{ lesson.description }}</p>
+                                <span class="lesson-duration">{{ formatDuration(lesson.duration) }}</span>
+                              </div>
+                            </div>
+
+                            <div class="lesson-actions">
+                              <button mat-icon-button 
+                                      *ngIf="lesson.type === 'video' && lesson.videoUrl"
+                                      (click)="playVideo(lesson.videoUrl)"
+                                      matTooltip="Xem video">
+                                <mat-icon>play_arrow</mat-icon>
+                              </button>
+                              
+                              <button mat-icon-button 
+                                      *ngIf="lesson.type === 'document' && lesson.documentUrl"
+                                      (click)="viewDocument(lesson.documentUrl)"
+                                      matTooltip="Xem tài liệu">
+                                <mat-icon>visibility</mat-icon>
+                              </button>
+                              
+                              <button mat-icon-button 
+                                      [color]="isLessonCompleted(lesson.id) ? 'primary' : ''"
+                                      (click)="markLessonCompleted(lesson.id)"
+                                      matTooltip="Đánh dấu hoàn thành">
+                                <mat-icon>{{ isLessonCompleted(lesson.id) ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </mat-expansion-panel>
+                  </mat-accordion>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Media viewer tab -->
+          <mat-tab label="Nội dung học" *ngIf="canAccessContent()">
+            <div class="tab-content">
+              <div class="media-viewer">
+                
+                <!-- Video player -->
+                <div class="video-player" *ngIf="showVideoPlayer && currentVideoUrl">
+                  <iframe [src]="currentVideoUrl"
+                          class="video-iframe"
+                          frameborder="0"
+                          allowfullscreen>
+                  </iframe>
+                </div>
+
+                <!-- Document viewer -->
+                <div class="document-viewer" *ngIf="showDocumentViewer && currentDocumentUrl">
+                  <iframe [src]="currentDocumentUrl"
+                          class="document-iframe"
+                          frameborder="0">
+                  </iframe>
+                </div>
+
+                <!-- No content selected -->
+                <div class="no-content" *ngIf="!showVideoPlayer && !showDocumentViewer">
+                  <mat-icon>touch_app</mat-icon>
+                  <h3>Chọn nội dung để học</h3>
+                  <p>Vui lòng chọn video hoặc tài liệu từ chương trình học để bắt đầu</p>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    </div>
+  </div>
+</div>

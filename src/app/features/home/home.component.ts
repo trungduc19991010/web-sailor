@@ -1,0 +1,189 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Subject, takeUntil } from 'rxjs';
+
+// Import service và interfaces
+import {
+  HomeService,
+  Stats,
+  TrainingField,
+  Course,
+  PlatformFeature,
+  HomePageData
+} from './services/home.service';
+import { DataService, User } from '../../core/services/data.service';
+
+@Component({
+  selector: 'app-home',
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatListModule, MatIconModule, MatProgressSpinnerModule],
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.scss'
+})
+export class HomeComponent implements OnInit, OnDestroy {
+  // Dữ liệu từ service
+  stats: Stats | null = null;
+  trainingFields: TrainingField[] = [];
+  featuredCourses: Course[] = [];
+  platformFeatures: PlatformFeature[] = [];
+
+  // Loading states
+  loading = false;
+  homeDataLoading = false;
+
+  // Thuộc tính cũ (giữ lại để tương thích)
+  users: User[] = [];
+
+  // Subject để unsubscribe
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private homeService: HomeService,
+    private dataService: DataService
+  ) { }
+
+  ngOnInit(): void {
+    this.loadHomeData();
+    this.loadUsers(); // Giữ lại để tương thích
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load dữ liệu trang chủ từ HomeService
+   */
+  private loadHomeData(): void {
+    // Subscribe to loading state
+    this.homeService.loading$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(loading => {
+        this.homeDataLoading = loading;
+      });
+
+    // Subscribe to home data
+    this.homeService.homeData$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        if (data) {
+          this.stats = data.stats;
+          this.trainingFields = data.trainingFields;
+          this.featuredCourses = data.featuredCourses;
+          this.platformFeatures = data.platformFeatures;
+          this.animateStats();
+        }
+      });
+  }
+
+  /**
+   * Refresh dữ liệu trang chủ
+   */
+  refreshHomeData(): void {
+    this.homeService.refreshHomeData();
+  }
+
+  /**
+   * Phương thức để animate số liệu thống kê
+   */
+  private animateStats(): void {
+    if (this.stats) {
+      console.log('Stats loaded và sẵn sàng animate:', this.stats);
+      // TODO: Thêm animation logic ở đây
+    }
+  }
+
+  /**
+   * Xử lý click vào lĩnh vực đào tạo
+   */
+  onTrainingFieldClick(field: TrainingField): void {
+    console.log('Clicked on training field:', field);
+    // TODO: Navigate to field detail page
+  }
+
+  /**
+   * Xử lý click vào khóa học
+   */
+  onCourseClick(course: Course): void {
+    console.log('Clicked on course:', course);
+    // TODO: Navigate to course detail page
+  }
+
+  /**
+   * Xử lý đăng ký khóa học
+   */
+  onEnrollCourse(course: Course): void {
+    console.log('Enroll in course:', course);
+    // TODO: Implement course enrollment logic
+  }
+
+  // ===== TRACKBY METHODS (để tối ưu performance) =====
+
+  /**
+   * TrackBy function cho training fields
+   */
+  trackByFieldId(index: number, field: TrainingField): number {
+    return field.id;
+  }
+
+  /**
+   * TrackBy function cho courses
+   */
+  trackByCourseId(index: number, course: Course): number {
+    return course.id;
+  }
+
+  /**
+   * TrackBy function cho platform features
+   */
+  trackByFeatureId(index: number, feature: PlatformFeature): number {
+    return feature.id;
+  }
+
+  // ===== PHƯƠNG THỨC CŨ (giữ lại để tương thích) =====
+
+  /**
+   * Phương thức Controller để tải dữ liệu users (giữ lại)
+   */
+  loadUsers(): void {
+    this.loading = true;
+    this.dataService.getUsers()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (users) => {
+          this.users = users;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Lỗi khi tải danh sách users:', error);
+          this.loading = false;
+        }
+      });
+  }
+
+  /**
+   * Phương thức Controller để thêm user mới (giữ lại)
+   */
+  addNewUser(): void {
+    const newUser = {
+      name: 'User mới ' + (this.users.length + 1),
+      email: `user${this.users.length + 1}@example.com`
+    };
+
+    this.dataService.addUser(newUser)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (user) => {
+          this.users.push(user);
+        },
+        error: (error) => {
+          console.error('Lỗi khi thêm user:', error);
+        }
+      });
+  }
+}

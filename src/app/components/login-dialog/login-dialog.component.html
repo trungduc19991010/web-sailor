@@ -1,0 +1,70 @@
+<div class="login-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Đăng nhập</h2>
+    <button mat-icon-button mat-dialog-close class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div mat-dialog-content class="dialog-content">
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
+      <!-- Username field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tên đăng nhập</mat-label>
+        <input matInput
+               type="text"
+               formControlName="username"
+               placeholder="Nhập tên đăng nhập">
+        <mat-icon matSuffix>person</mat-icon>
+        <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
+          Tên đăng nhập là bắt buộc
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Password field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Mật khẩu</mat-label>
+        <input matInput
+               [type]="hidePassword ? 'password' : 'text'"
+               formControlName="password"
+               placeholder="Nhập mật khẩu">
+        <button mat-icon-button
+                matSuffix
+                type="button"
+                (click)="hidePassword = !hidePassword">
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+          Mật khẩu là bắt buộc
+        </mat-error>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
+          Mật khẩu phải có ít nhất 6 ký tự
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Remember me -->
+      <div class="remember-me">
+        <div class="remember-checkbox">
+          <mat-checkbox formControlName="rememberMe">
+            Ghi nhớ đăng nhập
+          </mat-checkbox>
+        </div>
+        <a href="#" class="forgot-password">Quên mật khẩu?</a>
+      </div>
+
+      <!-- Login button -->
+      <button mat-raised-button
+              color="primary"
+              type="submit"
+              class="login-button full-width"
+              [disabled]="loginForm.invalid || isLoading">
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <span *ngIf="!isLoading">Đăng nhập</span>
+      </button>
+
+
+    </form>
+  </div>
+
+
+</div>

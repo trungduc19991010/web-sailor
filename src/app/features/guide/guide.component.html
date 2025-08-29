@@ -1,0 +1,225 @@
+<!-- Trang hướng dẫn học -->
+<div class="guide-container">
+  <!-- Header -->
+  <div class="guide-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-text">
+          <h1>
+            <mat-icon>menu_book</mat-icon>
+            Hướng dẫn học tập
+          </h1>
+          <p>Tài liệu hướng dẫn sử dụng hệ thống và phương pháp học tập hiệu quả</p>
+        </div>
+        <div class="header-actions">
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="refreshGuides()"
+                  [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+            Làm mới
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading spinner cho toàn bộ trang -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Đang tải danh sách hướng dẫn...</p>
+  </div>
+
+  <!-- Nội dung chính -->
+  <div class="guide-content" *ngIf="!loading">
+    <div class="container">
+      <div class="guide-layout">
+        
+        <!-- Sidebar - Danh sách tài liệu -->
+        <div class="guide-sidebar">
+          <mat-card class="sidebar-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>folder</mat-icon>
+                Danh sách tài liệu
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="guides-list" *ngIf="guides.length > 0">
+                <div class="guide-item" 
+                     *ngFor="let guide of guides; trackBy: trackByGuideId"
+                     [class.selected]="isGuideSelected(guide)"
+                     (click)="selectGuide(guide)">
+                  
+                  <div class="guide-icon">
+                    <mat-icon>{{ getCategoryIcon(guide.category) }}</mat-icon>
+                  </div>
+                  
+                  <div class="guide-info">
+                    <div class="guide-title">{{ guide.title }}</div>
+                    <div class="guide-meta">
+                      <span class="category">{{ guide.categoryName }}</span>
+                      <span class="size" *ngIf="guide.fileSize">
+                        {{ getFileSizeDisplay(guide.fileSize) }}
+                      </span>
+                    </div>
+                    <div class="guide-description" *ngIf="guide.description">
+                      {{ guide.description }}
+                    </div>
+                  </div>
+                  
+                  <div class="guide-actions">
+                    <button mat-icon-button 
+                            (click)="downloadFile(guide); $event.stopPropagation()"
+                            matTooltip="Tải xuống">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                    <button mat-icon-button 
+                            (click)="openInNewTab(guide); $event.stopPropagation()"
+                            matTooltip="Mở tab mới">
+                      <mat-icon>open_in_new</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Empty state -->
+              <div class="empty-state" *ngIf="guides.length === 0">
+                <mat-icon>description</mat-icon>
+                <p>Chưa có tài liệu hướng dẫn nào</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Main content - PDF Viewer -->
+        <div class="guide-main">
+          <mat-card class="viewer-card">
+            
+            <!-- Selected guide header -->
+            <mat-card-header *ngIf="selectedGuide">
+              <div mat-card-avatar class="guide-avatar">
+                <mat-icon>{{ getCategoryIcon(selectedGuide.category) }}</mat-icon>
+              </div>
+              <mat-card-title>{{ selectedGuide.title }}</mat-card-title>
+              <mat-card-subtitle>
+                <div class="guide-details">
+                  <span class="category">{{ selectedGuide.categoryName }}</span>
+                  <span class="updated" *ngIf="selectedGuide.updatedAt">
+                    Cập nhật: {{ selectedGuide.updatedAt | date:'dd/MM/yyyy' }}
+                  </span>
+                </div>
+              </mat-card-subtitle>
+              
+              <!-- Action buttons -->
+              <div class="header-actions">
+                <button mat-button 
+                        (click)="downloadFile(selectedGuide)"
+                        color="primary">
+                  <mat-icon>download</mat-icon>
+                  Tải xuống
+                </button>
+                <button mat-button 
+                        (click)="openInNewTab(selectedGuide)">
+                  <mat-icon>open_in_new</mat-icon>
+                  Mở tab mới
+                </button>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              <!-- Content Loading -->
+              <div class="content-loading" *ngIf="contentLoading">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Đang tải nội dung...</p>
+              </div>
+
+              <!-- Content Viewer -->
+              <div class="content-viewer" *ngIf="showContentViewer && safeContentUrl && selectedGuide">
+
+                <!-- Embedded Content Viewer -->
+                <div class="embedded-content-viewer">
+                  <iframe [src]="safeContentUrl"
+                          class="content-iframe"
+                          (load)="onContentLoadSuccess()"
+                          (error)="onContentLoadError()"
+                          frameborder="0"
+                          allowfullscreen>
+                    Trình duyệt của bạn không hỗ trợ iframe.
+                  </iframe>
+                </div>
+              </div>
+
+              <!-- No guide selected -->
+              <div class="no-selection" *ngIf="!selectedGuide && !loading">
+                <mat-icon>touch_app</mat-icon>
+                <h3>Chọn tài liệu để xem</h3>
+                <p>Vui lòng chọn một tài liệu từ danh sách bên trái để bắt đầu xem nội dung</p>
+              </div>
+
+              <!-- Error state -->
+              <div class="error-state" *ngIf="selectedGuide && !showContentViewer && !contentLoading">
+                <mat-icon>error_outline</mat-icon>
+                <h3>Không thể tải nội dung</h3>
+                <p>Vui lòng thử lại hoặc tải xuống file để xem</p>
+                <button mat-raised-button
+                        color="primary"
+                        (click)="selectGuide(selectedGuide!)">
+                  <mat-icon>refresh</mat-icon>
+                  Thử lại
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick help section -->
+  <div class="quick-help" *ngIf="!loading">
+    <div class="container">
+      <mat-card class="help-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>help_outline</mat-icon>
+            Hướng dẫn sử dụng
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="help-grid">
+            <div class="help-item">
+              <mat-icon>mouse</mat-icon>
+              <div>
+                <strong>Chọn tài liệu:</strong>
+                <span>Nhấn vào tài liệu trong danh sách để xem nội dung</span>
+              </div>
+            </div>
+            <div class="help-item">
+              <mat-icon>download</mat-icon>
+              <div>
+                <strong>Tải xuống:</strong>
+                <span>Nhấn nút tải xuống để lưu file về máy</span>
+              </div>
+            </div>
+            <div class="help-item">
+              <mat-icon>open_in_new</mat-icon>
+              <div>
+                <strong>Mở tab mới:</strong>
+                <span>Xem tài liệu trong tab riêng biệt</span>
+              </div>
+            </div>
+            <div class="help-item">
+              <mat-icon>zoom_in</mat-icon>
+              <div>
+                <strong>Phóng to/thu nhỏ:</strong>
+                <span>Sử dụng Ctrl + chuột để điều chỉnh kích thước</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

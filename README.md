@@ -1,59 +1,97 @@
-# SailorWebApp
+# Sailor Web App
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.10.
+Ứng dụng Angular được thiết kế theo mô hình MVC với Angular 19 và Angular Material.
+
+## Tổng quan
+
+Project này được tạo với Angular CLI version 19.2.10 và sử dụng:
+- **Angular 19**: Framework chính
+- **Angular Material**: UI Components
+- **SCSS**: Styling
+- **TypeScript**: Ngôn ngữ lập trình
+- **Server-Side Rendering (SSR)**: Được kích hoạt
+
+## Cấu trúc MVC
+
+### Model (Dữ liệu)
+- **Location**: `src/app/core/services/`
+- **File**: `data.service.ts`
+- **Chức năng**: Quản lý dữ liệu, API calls, business logic
+
+### View (Giao diện)
+- **Location**: `src/app/features/*/component.html`
+- **File**: `home.component.html`
+- **Chức năng**: Template HTML, hiển thị dữ liệu
+
+### Controller (Điều khiển)
+- **Location**: `src/app/features/*/component.ts`
+- **File**: `home.component.ts`
+- **Chức năng**: Xử lý logic, tương tác giữa Model và View
+
+## Cấu trúc thư mục
+
+```
+src/app/
+├── core/                 # Core module (singleton services)
+│   └── services/         # Services (Model trong MVC)
+│       └── data.service.ts
+├── shared/               # Shared module (common components, pipes, directives)
+│   └── shared.module.ts  # Export Angular Material modules
+├── features/             # Feature modules
+│   └── home/             # Home feature
+│       ├── home.component.ts    # Controller
+│       ├── home.component.html  # View
+│       └── home.component.scss  # Styles
+├── app.component.ts      # Root component
+├── app.routes.ts         # Routing configuration
+└── app.config.ts         # App configuration
+```
+
+## Tính năng chính
+
+1. **Navigation**: Toolbar với Material Design
+2. **Routing**: Lazy loading cho các components
+3. **Data Management**: Service pattern cho quản lý dữ liệu
+4. **Material Design**: UI components từ Angular Material
+5. **Responsive**: Thiết kế responsive
 
 ## Development server
 
-To start a local development server, run:
+Chạy `ng serve` để khởi động dev server. Truy cập `http://localhost:4200/`.
+Ứng dụng sẽ tự động reload khi bạn thay đổi source files.
 
+## Build
+
+Chạy `ng build` để build project. Build artifacts sẽ được lưu trong thư mục `dist/`.
+
+## Testing
+
+Chạy `ng test` để thực hiện unit tests via [Karma](https://karma-runner.github.io).
+
+## Mở rộng
+
+### Thêm feature mới:
 ```bash
-ng serve
+ng generate module features/new-feature
+ng generate component features/new-feature
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### Thêm service mới:
 ```bash
-ng generate component component-name
+ng generate service core/services/new-service
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Thêm routing:
+Cập nhật `app.routes.ts` để thêm route mới.
 
-```bash
-ng generate --help
-```
+## Angular Material Components được sử dụng
 
-## Building
+- MatToolbarModule
+- MatButtonModule
+- MatIconModule
+- MatCardModule
+- MatListModule
 
-To build the project run:
+## Thông tin thêm
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Để biết thêm về Angular CLI, sử dụng `ng help` hoặc xem [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli).

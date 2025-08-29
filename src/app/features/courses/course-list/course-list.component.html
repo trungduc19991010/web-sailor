@@ -1,0 +1,276 @@
+<!-- Trang danh sách khóa học -->
+<div class="course-list-container">
+  <!-- Header -->
+  <div class="course-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-text">
+          <h1>
+            <mat-icon>school</mat-icon>
+            Danh sách khóa học
+          </h1>
+          <p>Khám phá các khóa học chất lượng cao với nội dung phong phú và đa dạng</p>
+        </div>
+        <div class="header-actions">
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="refreshCourses()"
+                  [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+            Làm mới
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading spinner -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Đang tải danh sách khóa học...</p>
+  </div>
+
+  <!-- Main content -->
+  <div class="course-content" *ngIf="!loading">
+    <div class="container">
+      
+      <!-- Filters section -->
+      <div class="filters-section">
+        <mat-card class="filters-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>filter_list</mat-icon>
+              Bộ lọc tìm kiếm
+            </mat-card-title>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="filters-grid">
+              <!-- Search input -->
+              <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Tìm kiếm khóa học</mat-label>
+                <input matInput 
+                       [(ngModel)]="searchQuery"
+                       (ngModelChange)="applyFilters()"
+                       placeholder="Nhập tên khóa học, giảng viên...">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <!-- Category filter -->
+              <mat-form-field appearance="outline">
+                <mat-label>Lĩnh vực</mat-label>
+                <mat-select [(ngModel)]="selectedCategory" 
+                           (ngModelChange)="applyFilters()">
+                  <mat-option value="">Tất cả lĩnh vực</mat-option>
+                  <mat-option *ngFor="let category of categories" [value]="category">
+                    {{ category }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Level filter -->
+              <mat-form-field appearance="outline">
+                <mat-label>Cấp độ</mat-label>
+                <mat-select [(ngModel)]="selectedLevel" 
+                           (ngModelChange)="applyFilters()">
+                  <mat-option value="">Tất cả cấp độ</mat-option>
+                  <mat-option *ngFor="let level of levels" [value]="level">
+                    {{ getLevelDisplayText(level) }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Status filter -->
+              <mat-form-field appearance="outline">
+                <mat-label>Trạng thái</mat-label>
+                <mat-select [(ngModel)]="selectedStatus" 
+                           (ngModelChange)="applyFilters()">
+                  <mat-option value="">Tất cả trạng thái</mat-option>
+                  <mat-option *ngFor="let status of statuses" [value]="status">
+                    {{ getStatusDisplayText(status) }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Clear filters button -->
+              <div class="filter-actions">
+                <button mat-button 
+                        color="warn" 
+                        (click)="clearFilters()">
+                  <mat-icon>clear</mat-icon>
+                  Xóa bộ lọc
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Results summary -->
+      <div class="results-summary" *ngIf="filteredCourses.length > 0">
+        <p>
+          Hiển thị {{ getPaginatedCourses().length }} trong tổng số {{ filteredCourses.length }} khóa học
+          <span *ngIf="searchQuery || selectedCategory || selectedLevel || selectedStatus">
+            (đã lọc từ {{ courses.length }} khóa học)
+          </span>
+        </p>
+      </div>
+
+      <!-- Courses grid -->
+      <div class="courses-grid" *ngIf="getPaginatedCourses().length > 0">
+        <mat-card class="course-card" 
+                  *ngFor="let course of getPaginatedCourses(); trackBy: trackByCourseId"
+                  (click)="viewCourseDetail(course.id)">
+          
+          <!-- Course image -->
+          <div class="course-image">
+            <img [src]="course.imageUrl || 'assets/images/default-course.jpg'" 
+                 [alt]="course.title"
+                 onerror="this.src='assets/images/default-course.jpg'">
+            
+            <!-- Status badge -->
+            <div class="status-badge" 
+                 [ngClass]="'status-' + course.status">
+              {{ getStatusDisplayText(course.status) }}
+            </div>
+
+            <!-- Price badge -->
+            <div class="price-badge" *ngIf="course.price === 0">
+              <mat-icon>money_off</mat-icon>
+              Miễn phí
+            </div>
+          </div>
+
+          <!-- Course content -->
+          <mat-card-header>
+            <mat-card-title>{{ course.title }}</mat-card-title>
+            <mat-card-subtitle>
+              <div class="course-meta">
+                <span class="instructor">
+                  <mat-icon>person</mat-icon>
+                  {{ course.instructor }}
+                </span>
+                <span class="category">{{ course.category }}</span>
+              </div>
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <p class="course-description">{{ course.description }}</p>
+            
+            <!-- Course details -->
+            <div class="course-details">
+              <div class="detail-item">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ formatDuration(course.duration) }}</span>
+              </div>
+              
+              <div class="detail-item">
+                <mat-icon>signal_cellular_alt</mat-icon>
+                <span [style.color]="getLevelColor(course.level)">
+                  {{ getLevelDisplayText(course.level) }}
+                </span>
+              </div>
+              
+              <div class="detail-item" *ngIf="course.studentsCount">
+                <mat-icon>group</mat-icon>
+                <span>{{ course.studentsCount }} học viên</span>
+              </div>
+              
+              <div class="detail-item" *ngIf="course.rating">
+                <mat-icon>star</mat-icon>
+                <span>{{ course.rating }}/5 ({{ course.reviewsCount || 0 }})</span>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="course-tags" *ngIf="course.tags && course.tags.length > 0">
+              <mat-chip-set>
+                <mat-chip *ngFor="let tag of course.tags.slice(0, 3)">
+                  {{ tag }}
+                </mat-chip>
+                <mat-chip *ngIf="course.tags.length > 3" class="more-tags">
+                  +{{ course.tags.length - 3 }}
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions>
+            <div class="card-actions">
+              <div class="price-info" *ngIf="course.price > 0">
+                <span class="price">{{ formatPrice(course.price) }}</span>
+              </div>
+              
+              <div class="action-buttons">
+                <button mat-button 
+                        (click)="viewCourseDetail(course.id); $event.stopPropagation()">
+                  <mat-icon>visibility</mat-icon>
+                  Chi tiết
+                </button>
+                
+                <button mat-raised-button
+                        color="primary"
+                        [disabled]="course.status !== 'PUBLISHED'"
+                        (click)="enrollCourse(course); $event.stopPropagation()">
+                  <mat-icon>school</mat-icon>
+                  {{ course.status === 'PUBLISHED' ? 'Đăng ký' : 'Chưa mở' }}
+                </button>
+              </div>
+            </div>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="filteredCourses.length === 0 && !loading">
+        <mat-icon>school_off</mat-icon>
+        <h3>Không tìm thấy khóa học nào</h3>
+        <p *ngIf="searchQuery || selectedCategory || selectedLevel || selectedStatus">
+          Thử điều chỉnh bộ lọc để tìm thấy khóa học phù hợp
+        </p>
+        <p *ngIf="!searchQuery && !selectedCategory && !selectedLevel && !selectedStatus">
+          Hiện tại chưa có khóa học nào trong hệ thống
+        </p>
+        <button mat-raised-button 
+                color="primary" 
+                (click)="clearFilters()"
+                *ngIf="searchQuery || selectedCategory || selectedLevel || selectedStatus">
+          <mat-icon>clear</mat-icon>
+          Xóa bộ lọc
+        </button>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-section" *ngIf="totalPages > 1">
+        <div class="pagination">
+          <!-- Previous button -->
+          <button mat-icon-button 
+                  [disabled]="currentPage === 1"
+                  (click)="changePage(currentPage - 1)">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          <!-- Page numbers -->
+          <button mat-button 
+                  *ngFor="let page of getPageNumbers()"
+                  [class.active]="page === currentPage"
+                  (click)="changePage(page)">
+            {{ page }}
+          </button>
+
+          <!-- Next button -->
+          <button mat-icon-button 
+                  [disabled]="currentPage === totalPages"
+                  (click)="changePage(currentPage + 1)">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+        
+        <div class="pagination-info">
+          <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
