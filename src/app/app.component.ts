@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -36,7 +36,8 @@ import { UserToken } from './core/models/user-token';
     CommonModule,
     ReactiveFormsModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -54,20 +55,29 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private dialog: MatDialog,
     public authenticationService: AuthenticationService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
+    // Khởi tạo trạng thái đăng nhập ban đầu
+    this.updateAuthState();
+
     // Subscribe to authentication state
     this.subscriptions.add(
       this.authenticationService.user.subscribe(user => {
-        this.isLoggedIn = this.authenticationService.isAuthenticated();
-        this.currentUser = user;
+        this.updateAuthState();
       })
     );
 
     // Check if mobile on init
     this.checkIfMobile();
+  }
+
+  private updateAuthState(): void {
+    this.isLoggedIn = this.authenticationService.isAuthenticated();
+    this.currentUser = this.authenticationService.userTokenValue;
+    this.cdr.markForCheck();
   }
 
   ngOnDestroy(): void {
@@ -85,8 +95,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result?.success && result.user) {
-        this.isLoggedIn = true;
-        this.currentUser = result.user;
+        // Authentication service sẽ tự động cập nhật state qua observable
+        // Không cần manually set state ở đây
       }
     });
   }

@@ -96,7 +96,7 @@
         </li>
         <li><a routerLink="/guide" (click)="toggleMobileMenu()">Hướng dẫn</a></li>
         <li><a href="#" (click)="toggleMobileMenu()">Đối tác</a></li>
-        <li class="mobile-auth">
+        <li class="mobile-auth" *ngIf="!isLoggedIn">
           <button mat-raised-button color="primary" (click)="openLoginDialog(); toggleMobileMenu()">
             Đăng nhập
           </button>

@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection, APP_INITIALIZER } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
@@ -10,6 +10,12 @@ import { NgxPermissionsModule } from 'ngx-permissions';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
+import { AuthenticationService } from './core/guards/authentication.service';
+
+// Factory function cho APP_INITIALIZER
+export function initializeApp(authService: AuthenticationService) {
+  return () => authService.startApp();
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -24,6 +30,12 @@ export const appConfig: ApplicationConfig = {
     CookieService,
     CurrencyPipe,
     DatePipe,
-    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeApp,
+      deps: [AuthenticationService],
+      multi: true
+    }
   ]
 };

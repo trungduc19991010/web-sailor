@@ -1,5 +1,5 @@
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Injectable} from '@angular/core';
+import {Injectable, PLATFORM_ID, Inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {JwtHelperService} from "@auth0/angular-jwt";
 import {BehaviorSubject, Observable, of} from 'rxjs';
@@ -10,7 +10,7 @@ import {CookieService} from 'ngx-cookie-service';
 import {ResponseApi} from '../models/response-api';
 import {UserInfo} from '../models/user-info';
 import {NgxPermissionsService} from 'ngx-permissions';
-import {CurrencyPipe, DatePipe} from '@angular/common';
+import {CurrencyPipe, DatePipe, isPlatformBrowser} from '@angular/common';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
@@ -38,6 +38,7 @@ export class AuthenticationService {
     public snackBar: MatSnackBar,
     public dialog: MatDialog,
     public cookieService: CookieService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.userSubject = new BehaviorSubject<UserToken>(new UserToken());
     this.user = this.userSubject.asObservable();
@@ -50,7 +51,10 @@ export class AuthenticationService {
   }
 
   public getPermissions() {
-    return sessionStorage.getItem('permissions');
+    if (isPlatformBrowser(this.platformId)) {
+      return sessionStorage.getItem('permissions');
+    }
+    return null;
   }
 
   public convertObjectToString = (object: any) => JSON.stringify(object);
@@ -58,10 +62,17 @@ export class AuthenticationService {
   public isAuthenticated(): boolean {
     const token = this.getToken();
 
-    if (null === token)
+    if (!token || token === null || token === '' || token === undefined) {
       return false;
-
-    return !this.jwtHelper.isTokenExpired(token.toString());
+    }
+    
+    try {
+      const isExpired = this.jwtHelper.isTokenExpired(token.toString());
+      return !isExpired;
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+      return false;
+    }
   }
 
 
@@ -108,7 +119,7 @@ export class AuthenticationService {
         // Step 3: Set the final user object and finish the login process
         this.currentUser = userTokenWithInfo;
 
-        if (hasRemember) {
+        if (hasRemember && isPlatformBrowser(this.platformId)) {
           localStorage.setItem('remember_user_name', this.currentUser.userName);
         }
 
@@ -116,8 +127,10 @@ export class AuthenticationService {
         permissions = (Array.isArray(permissions)) ? permissions : [permissions];
         this.permissions = permissions;
 
-        sessionStorage.setItem('permissions', this.convertObjectToString(this.currentUser.permissions));
-        sessionStorage.setItem('companyId', this.currentUser.company?.id);
+        if (isPlatformBrowser(this.platformId)) {
+          sessionStorage.setItem('permissions', this.convertObjectToString(this.currentUser.permissions));
+          sessionStorage.setItem('companyId', this.currentUser.company?.id);
+        }
         this.permissionsService.loadPermissions(permissions);
 
         this.userSubject.next(this.currentUser);
@@ -154,8 +167,10 @@ export class AuthenticationService {
       this.permissions = permissions;
 
       // save to section
-      sessionStorage.setItem('permissions', this.convertObjectToString(user.permissions));
-      sessionStorage.setItem('companyId', user.company?.id);
+      if (isPlatformBrowser(this.platformId)) {
+        sessionStorage.setItem('permissions', this.convertObjectToString(user.permissions));
+        sessionStorage.setItem('companyId', user.company?.id);
+      }
       this.permissionsService.loadPermissions(permissions);
 
 
@@ -166,20 +181,14 @@ export class AuthenticationService {
 
 
   logout() {
+    let refToken = this.cookieService.get('r-token');
 
-    let refToken = '';
-
-    refToken = this.cookieService.get('r-token');
-
-    this.http.post<any>(`${environment.services_domain}/Account/revoke`, {refreshToken: refToken}).subscribe();
-    this.cookieService.delete('r-token','/');
-    this.cookieService.delete('a-token','/');
-    sessionStorage.clear();
-
+    if (refToken) {
+      this.http.post<any>(`${environment.services_domain}/Account/revoke`, {refreshToken: refToken}).subscribe();
+    }
+    
     this.stopRefreshTokenTimer();
-    this.userSubject.next(new UserToken());
-    // this.router.navigate(['/login']);
-    this.router.navigateByUrl('/login');
+    this.clearSession(true); // Navigate to login after logout
   }
 
   refreshToken() {
@@ -188,10 +197,12 @@ export class AuthenticationService {
       cookie = this.cookieService.get('r-token');
     return this.http.post<ResponseApi<UserToken>>(`${environment.services_domain}/Account/refresh-token`, {refreshToken: cookie}, {withCredentials: true})
       .pipe(
-        map((user: ResponseApi<UserToken>) => {
+        switchMap((user: ResponseApi<UserToken>) => {
           this.currentUser = user?.data;
           this.cookieService.deleteAll();
-          sessionStorage.clear();
+          if (isPlatformBrowser(this.platformId)) {
+            sessionStorage.clear();
+          }
           this.cookieService.set('r-token', this.currentUser.refreshToken, {
             expires: new Date(this.currentUser.tokenExpiration),
             path: '/',
@@ -204,7 +215,9 @@ export class AuthenticationService {
             secure: false
           });
 
-          sessionStorage.setItem('companyId', this.currentUser.company?.id);
+          if (isPlatformBrowser(this.platformId)) {
+            sessionStorage.setItem('companyId', this.currentUser.company?.id);
+          }
 
           //let permissions = this.jwtHelper?.decodeToken(user.token)['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
           let permissions = this.currentUser.permissions;
@@ -212,16 +225,32 @@ export class AuthenticationService {
           this.permissions = permissions;
 
           // save to section
-          sessionStorage.setItem('permissions', this.convertObjectToString(this.currentUser.permissions));
+          if (isPlatformBrowser(this.platformId)) {
+            sessionStorage.setItem('permissions', this.convertObjectToString(this.currentUser.permissions));
+          }
           this.permissionsService.loadPermissions(permissions);
 
-
-          this.userSubject.next(this.currentUser);
-          this.startRefreshTokenTimer();
-          return user;
+          // Gọi getUserInformation để lấy thông tin user mới nhất
+          return this.getUserInformation().pipe(
+            map(userInfoResponse => {
+              if (userInfoResponse.result === 1) {
+                this.currentUser.userInfo = userInfoResponse.data;
+              }
+              this.userSubject.next(this.currentUser);
+              this.startRefreshTokenTimer();
+              return user;
+            }),
+            catchError(userInfoError => {
+              console.error('Lỗi khi lấy thông tin user:', userInfoError);
+              // Vẫn tiếp tục với user data hiện tại nếu không lấy được user info
+              this.userSubject.next(this.currentUser);
+              this.startRefreshTokenTimer();
+              return of(user);
+            })
+          );
         }),
         catchError(err => {
-          this.clearSession();
+          this.clearSession(); // Don't navigate, let the caller decide
           return of('error', err);
         })
       );
@@ -233,7 +262,9 @@ export class AuthenticationService {
     this.http.post<ResponseApi<UserToken>>(`${environment.services_domain}/Account/refresh-token`, {refreshToken: cookie}, {withCredentials: true}).subscribe({
       next: (user: ResponseApi<UserToken>) => {
         this.cookieService.deleteAll();
-        sessionStorage.clear();
+        if (isPlatformBrowser(this.platformId)) {
+          sessionStorage.clear();
+        }
         if (user?.data == null) {
           this.logout();
           return;
@@ -250,21 +281,40 @@ export class AuthenticationService {
           path: '/',
           secure: false
         });
-        sessionStorage.setItem('companyId', userData.company?.id);
-        //let permissions = this.jwtHelper?.decodeToken(user.token)['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+        if (isPlatformBrowser(this.platformId)) {
+          sessionStorage.setItem('companyId', userData.company?.id);
+        }
+        //let permissions = this.jwtHelper?.decodeToken(user.token)['http://schemas.microsoft.com/ws/2008/06/identity/calls/role'];
 
         let permissions = userData.permissions;
         permissions = (Array.isArray(permissions)) ? permissions : [permissions];
         this.permissions = permissions;
 
         // save to section
-        sessionStorage.setItem('permissions', this.convertObjectToString(userData.permissions));
+        if (isPlatformBrowser(this.platformId)) {
+          sessionStorage.setItem('permissions', this.convertObjectToString(userData.permissions));
+        }
         this.permissionsService.loadPermissions(permissions);
 
-
-        this.userSubject.next(userData);
-        this.startRefreshTokenTimer();
-        resolve(userData);
+        // Gọi getUserInformation để lấy thông tin user mới nhất
+        this.getUserInformation().subscribe({
+          next: (userInfoResponse) => {
+            if (userInfoResponse.result === 1) {
+              userData.userInfo = userInfoResponse.data;
+              this.currentUser = userData;
+            }
+            this.userSubject.next(userData);
+            this.startRefreshTokenTimer();
+            resolve(userData);
+          },
+          error: (error) => {
+            console.error('Lỗi khi lấy thông tin user:', error);
+            // Vẫn tiếp tục với user data hiện tại nếu không lấy được user info
+            this.userSubject.next(userData);
+            this.startRefreshTokenTimer();
+            resolve(userData);
+          }
+        });
       },
       error: _error => {
         this.clearSession();
@@ -278,27 +328,33 @@ export class AuthenticationService {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise<void>(async (resolve) => {
       if (this.isAuthenticated()) {
-        const token = await this.refreshTokenAsync();
-        if ('' === token.token || null === token.token) {
+        try {
+          const token = await this.refreshTokenAsync();
+          if ('' === token.token || null === token.token) {
+            this.clearSession();
+          }
+        } catch (error) {
           this.clearSession();
-          resolve();
-        } else {
-          // this.permissionsService.loadPermissions(token.permissions);
-          resolve();
         }
       } else {
-        this.clearSession();
-        resolve();
+        // Không clear session nếu chưa có token, chỉ đảm bảo state sạch
+        this.userSubject.next(new UserToken());
       }
+      resolve();
     });
   }
 
-  private clearSession() {
-    localStorage.clear();
-    sessionStorage.clear();
+  private clearSession(shouldNavigateToLogin: boolean = false) {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
     this.cookieService.deleteAll();
-    // this.router.navigate(['/login']);
-    this.router.navigateByUrl('/login');
+    this.userSubject.next(new UserToken());
+    
+    if (shouldNavigateToLogin) {
+      this.router.navigateByUrl('/login');
+    }
   }
 
   getUserInformation = () => this.http.get<ResponseApi<UserInfo>>(`${environment.services_domain}/user/user-info`, {withCredentials: true});

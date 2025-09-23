@@ -1,20 +1,30 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
-// Import service và interfaces
-import { CourseService, Course, CourseStatus, CourseLevel } from '../services/course.service';
+// Import services và interfaces
+import { TraineeLectureService } from '../services/trainee-lecture.service';
+import { AuthenticationService } from '../../../core/guards/authentication.service';
+import { 
+  TraineeLecture, 
+  TraineeLectureRequest,
+  StatusLearn, 
+  getStatusLearnDisplayText, 
+  getStatusLearnColor 
+} from '../../../core/models/trainee-lecture';
 
 @Component({
   selector: 'app-course-list',
@@ -27,64 +37,70 @@ import { CourseService, Course, CourseStatus, CourseLevel } from '../services/co
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatChipsModule,
     MatBadgeModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatInputModule
+    MatInputModule,
+    MatSnackBarModule,
+    MatPaginatorModule
   ],
   templateUrl: './course-list.component.html',
   styleUrl: './course-list.component.scss'
 })
 export class CourseListComponent implements OnInit, OnDestroy {
-  // Dữ liệu từ service
-  courses: Course[] = [];
-  filteredCourses: Course[] = [];
+  // Dữ liệu từ service - chỉ hiển thị khóa học của tôi
+  myCourses: TraineeLecture[] = [];
   
   // Loading states
   loading = false;
+  error: string | null = null;
   
-  // Filter options
-  searchQuery = '';
-  selectedCategory = '';
-  selectedLevel = '';
-  selectedStatus = '';
+  // Filter options cho TraineeLecture
+  searchTitle = '';
+  selectedStatusLearn: StatusLearn | '' = '';
   
-  // Filter options data
-  categories: string[] = [];
-  levels = Object.values(CourseLevel);
-  statuses = Object.values(CourseStatus);
+  // StatusLearn options cho TraineeLecture
+  statusLearnOptions = [
+    { value: '', label: 'Tất cả trạng thái' },
+    { value: StatusLearn.Created, label: 'Đã tạo' },
+    { value: StatusLearn.InProgressLearn, label: 'Đang học' },
+    { value: StatusLearn.CompletedLearn, label: 'Hoàn thành học' },
+    { value: StatusLearn.InProgressExam, label: 'Đang thi' },
+    { value: StatusLearn.CompletedExam, label: 'Hoàn thành thi' }
+  ];
   
   // Pagination
   currentPage = 1;
-  itemsPerPage = 12;
-  totalPages = 0;
+  pageSize = 10;
+  totalItems = 0;
   
   // Subject để unsubscribe
   private destroy$ = new Subject<void>();
 
   constructor(
-    private courseService: CourseService,
-    private router: Router,
-    private route: ActivatedRoute
+    private traineeLectureService: TraineeLectureService,
+    private authenticationService: AuthenticationService,
+    private snackBar: MatSnackBar,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
-    this.loadCourses();
-    this.handleQueryParams();
+    this.subscribeToServiceStates();
+    
+    // Kiểm tra trạng thái đăng nhập và subscribe đến thay đổi
+    this.authenticationService.user
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        if (user.token) {
+          this.loadMyCourses();
+        } else {
+          // Nếu chưa đăng nhập, clear dữ liệu
+          this.myCourses = [];
+          this.showLoginRequiredMessage();
+        }
+      });
   }
 
-  /**
-   * Handle query parameters from navigation
-   */
-  private handleQueryParams(): void {
-    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      if (params['category']) {
-        this.selectedCategory = params['category'];
-        this.applyFilters();
-      }
-    });
-  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -92,243 +108,247 @@ export class CourseListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load danh sách khóa học
+   * Subscribe to service states (loading, error) của TraineeLectureService
    */
-  private loadCourses(): void {
-    this.loading = true;
-    
-    this.courseService.getCourses()
+  private subscribeToServiceStates(): void {
+    // Subscribe to loading state
+    this.traineeLectureService.loading$
       .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (courses) => {
-          this.courses = courses;
-          this.extractCategories();
-          this.applyFilters();
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Lỗi khi tải danh sách khóa học:', error);
-          this.loading = false;
+      .subscribe(loading => {
+        this.loading = loading;
+      });
+
+    // Subscribe to error state
+    this.traineeLectureService.error$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(error => {
+        this.error = error;
+        if (error) {
+          this.snackBar.open(error, 'Đóng', {
+            duration: 5000,
+            verticalPosition: 'top',
+            horizontalPosition: 'center',
+            panelClass: ['snack-error']
+          });
         }
       });
   }
 
   /**
-   * Extract unique categories from courses
+   * Load danh sách khóa học của tôi từ TraineeLecture API
    */
-  private extractCategories(): void {
-    const categorySet = new Set(this.courses.map(course => course.category));
-    this.categories = Array.from(categorySet).sort();
+  private loadMyCourses(): void {
+    // Kiểm tra authentication trước khi gọi API
+    if (!this.authenticationService.userTokenValue.token) {
+      console.log('User chưa đăng nhập, không gọi API TraineeLecture');
+      this.myCourses = [];
+      return;
+    }
+
+    // Tạo request với cả title và status filter
+    const request: TraineeLectureRequest = {
+      IsPaging: true,
+      PageNumber: this.currentPage,
+      PageSize: this.pageSize
+    };
+
+    // Thêm title filter nếu có
+    if (this.searchTitle && this.searchTitle.trim()) {
+      request.Title = this.searchTitle.trim();
+    }
+
+    // Thêm status filter nếu có
+    if (this.selectedStatusLearn !== '' && this.selectedStatusLearn !== undefined) {
+      request.StatusLearn = this.selectedStatusLearn as StatusLearn;
+    }
+
+    const request$ = this.traineeLectureService.getTraineeLectures(request);
+
+    request$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (courses) => {
+          this.myCourses = courses;
+          // Note: API có thể cần trả về totalCount để tính toán pagination chính xác
+          // Hiện tại set tạm thời
+          this.totalItems = courses.length < this.pageSize ? 
+            (this.currentPage - 1) * this.pageSize + courses.length :
+            this.currentPage * this.pageSize + 1;
+        },
+        error: (error) => {
+          console.error('Lỗi khi tải khóa học của tôi:', error);
+        }
+      });
   }
 
+
   /**
-   * Apply filters to courses
+   * Apply filters cho TraineeLecture
    */
   applyFilters(): void {
-    let filtered = [...this.courses];
-
-    // Search filter
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(course => 
-        course.title.toLowerCase().includes(query) ||
-        course.description.toLowerCase().includes(query) ||
-        course.instructor.toLowerCase().includes(query) ||
-        course.tags?.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    // Category filter
-    if (this.selectedCategory) {
-      filtered = filtered.filter(course => course.category === this.selectedCategory);
-    }
-
-    // Level filter
-    if (this.selectedLevel) {
-      filtered = filtered.filter(course => course.level === this.selectedLevel);
-    }
-
-    // Status filter
-    if (this.selectedStatus) {
-      filtered = filtered.filter(course => course.status === this.selectedStatus);
-    }
-
-    this.filteredCourses = filtered;
-    this.calculatePagination();
+    this.currentPage = 1; // Reset về trang đầu
+    this.loadMyCourses();
   }
 
   /**
-   * Calculate pagination
-   */
-  private calculatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredCourses.length / this.itemsPerPage);
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = 1;
-    }
-  }
-
-  /**
-   * Get courses for current page
-   */
-  getPaginatedCourses(): Course[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    return this.filteredCourses.slice(startIndex, endIndex);
-  }
-
-  /**
-   * Change page
-   */
-  changePage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-    }
-  }
-
-  /**
-   * Get page numbers for pagination
-   */
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
-    
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
-    
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    
-    return pages;
-  }
-
-  /**
-   * Clear all filters
+   * Clear filters
    */
   clearFilters(): void {
-    this.searchQuery = '';
-    this.selectedCategory = '';
-    this.selectedLevel = '';
-    this.selectedStatus = '';
+    this.searchTitle = '';
+    this.selectedStatusLearn = '';
     this.currentPage = 1;
-    this.applyFilters();
+    this.loadMyCourses();
+  }
+
+  /**
+   * Xử lý thay đổi trang
+   */
+  onPageChange(event: PageEvent): void {
+    this.currentPage = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
+    this.loadMyCourses();
   }
 
   /**
    * Refresh courses list
    */
   refreshCourses(): void {
-    this.clearFilters();
-    this.loadCourses();
-  }
-
-  /**
-   * TrackBy function cho courses list
-   */
-  trackByCourseId(index: number, course: Course): number {
-    return course.id;
-  }
-
-  /**
-   * Get status display text
-   */
-  getStatusDisplayText(status: CourseStatus): string {
-    const statusMap = {
-      [CourseStatus.DRAFT]: 'Bản nháp',
-      [CourseStatus.PUBLISHED]: 'Đã xuất bản',
-      [CourseStatus.ARCHIVED]: 'Đã lưu trữ',
-      [CourseStatus.COMING_SOON]: 'Sắp ra mắt'
-    };
-    return statusMap[status] || status;
-  }
-
-  /**
-   * Get level display text
-   */
-  getLevelDisplayText(level: CourseLevel): string {
-    const levelMap = {
-      [CourseLevel.BEGINNER]: 'Cơ bản',
-      [CourseLevel.INTERMEDIATE]: 'Trung cấp',
-      [CourseLevel.ADVANCED]: 'Nâng cao',
-      [CourseLevel.EXPERT]: 'Chuyên gia'
-    };
-    return levelMap[level] || level;
-  }
-
-  /**
-   * Get status color
-   */
-  getStatusColor(status: CourseStatus): string {
-    const colorMap = {
-      [CourseStatus.DRAFT]: 'warn',
-      [CourseStatus.PUBLISHED]: 'primary',
-      [CourseStatus.ARCHIVED]: 'accent',
-      [CourseStatus.COMING_SOON]: 'primary'
-    };
-    return colorMap[status] || 'primary';
-  }
-
-  /**
-   * Get level color
-   */
-  getLevelColor(level: CourseLevel): string {
-    const colorMap = {
-      [CourseLevel.BEGINNER]: '#4caf50',
-      [CourseLevel.INTERMEDIATE]: '#ff9800',
-      [CourseLevel.ADVANCED]: '#f44336',
-      [CourseLevel.EXPERT]: '#9c27b0'
-    };
-    return colorMap[level] || '#666';
-  }
-
-  /**
-   * Format duration display
-   */
-  formatDuration(minutes: number): string {
-    if (minutes < 60) {
-      return `${minutes} phút`;
+    if (this.authenticationService.userTokenValue.token) {
+      this.clearFilters();
+      this.traineeLectureService.refreshData();
+    } else {
+      this.showLoginRequiredMessage();
     }
-    
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    if (remainingMinutes === 0) {
-      return `${hours} giờ`;
+  }
+
+  /**
+   * Hiển thị thông báo cần đăng nhập
+   */
+  private showLoginRequiredMessage(): void {
+    // Chỉ hiển thị message nếu đã có user tương tác (không phải lần đầu load trang)
+    // this.snackBar.open('Đăng nhập để xem khóa học của bạn', 'Đóng', {
+    //   duration: 3000,
+    //   horizontalPosition: 'center',
+    //   verticalPosition: 'top'
+    // });
+  }
+
+
+  // ===== METHODS CHO TRAINEE LECTURE =====
+
+  /**
+   * Get status display text cho TraineeLecture
+   */
+  getStatusLearnDisplayText(status: StatusLearn): string {
+    return getStatusLearnDisplayText(status);
+  }
+
+  /**
+   * Get status color cho TraineeLecture
+   */
+  getStatusLearnColor(status: StatusLearn): string {
+    return getStatusLearnColor(status);
+  }
+
+  /**
+   * Format date display cho TraineeLecture
+   */
+  formatDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return dateString;
     }
-    
-    return `${hours} giờ ${remainingMinutes} phút`;
   }
 
   /**
-   * Format price display
+   * Navigate to TraineeLecture detail
    */
-  formatPrice(price: number): string {
-    if (price === 0) {
-      return 'Miễn phí';
-    }
-    
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
+  viewTraineeLectureDetail(course: TraineeLecture): void {
+    this.router.navigate(['/courses', course.lectureId]);
   }
 
   /**
-   * Navigate to course detail
+   * Start learning course
    */
-  viewCourseDetail(courseId: number): void {
-    this.router.navigate(['/courses', courseId]);
+  startLearning(course: TraineeLecture): void {
+    console.log('Bắt đầu học khóa học:', course);
+    // TODO: Implement navigation to learning interface
+    // this.router.navigate(['/learn', course.lectureId]);
   }
 
   /**
-   * Enroll in course
+   * Continue learning course
    */
-  enrollCourse(course: Course): void {
-    // TODO: Implement course enrollment
-    console.log('Enroll in course:', course);
+  continueLearning(course: TraineeLecture): void {
+    console.log('Tiếp tục học khóa học:', course);
+    // TODO: Implement navigation to learning interface
+  }
+
+  /**
+   * Start exam
+   */
+  startExam(course: TraineeLecture): void {
+    console.log('Bắt đầu thi khóa học:', course);
+    // TODO: Implement navigation to exam interface
+  }
+
+  /**
+   * View certificate
+   */
+  viewCertificate(course: TraineeLecture): void {
+    console.log('Xem chứng chỉ khóa học:', course);
+    // TODO: Implement certificate viewing
+  }
+
+  /**
+   * Check if can start learning
+   */
+  canStartLearning(course: TraineeLecture): boolean {
+    return course.statusLearn === StatusLearn.Created;
+  }
+
+  /**
+   * Check if can continue learning
+   */
+  canContinueLearning(course: TraineeLecture): boolean {
+    return course.statusLearn === StatusLearn.InProgressLearn;
+  }
+
+  /**
+   * Check if can start exam
+   */
+  canStartExam(course: TraineeLecture): boolean {
+    return course.statusLearn === StatusLearn.CompletedLearn || 
+           course.statusLearn === StatusLearn.InProgressExam;
+  }
+
+  /**
+   * Check if completed
+   */
+  isCompleted(course: TraineeLecture): boolean {
+    return course.statusLearn === StatusLearn.CompletedExam;
+  }
+
+  /**
+   * TrackBy function cho TraineeLecture list
+   */
+  trackByTraineeLectureId(index: number, course: TraineeLecture): string {
+    return course.lectureId;
+  }
+
+  /**
+   * Clear error state
+   */
+  clearError(): void {
+    this.traineeLectureService.clearError();
+    this.error = null;
   }
 }
