@@ -440,21 +440,28 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     // Tìm lecturePageTraineeId tương ứng với page này
     const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === page.id);
     if (pageTrainee) {
-      // Gọi startPage API
-      this.lectureDetailService.startPage(pageTrainee.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            console.log('Started page successfully:', response);
-            // Cập nhật trạng thái trong local data nếu cần
-            pageTrainee.statusLearn = 1; // InProgressLearn
-            pageTrainee.timetStartLearn = new Date().toISOString();
-          },
-          error: (error) => {
-            console.error('Error starting page:', error);
-            this.showErrorMessage('Không thể bắt đầu trang học');
-          }
-        });
+      // Chỉ gọi startPage API nếu trang chưa hoàn thành
+      if (pageTrainee.statusLearn !== 2) { // Chưa CompletedLearn
+        // Gọi startPage API
+        this.lectureDetailService.startPage(pageTrainee.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (response) => {
+              console.log('Started page successfully:', response);
+              // Cập nhật trạng thái trong local data nếu cần
+              if (pageTrainee.statusLearn === 0) { // Chỉ cập nhật nếu chưa bắt đầu
+                pageTrainee.statusLearn = 1; // InProgressLearn
+                pageTrainee.timetStartLearn = new Date().toISOString();
+              }
+            },
+            error: (error) => {
+              console.error('Error starting page:', error);
+              this.showErrorMessage('Không thể bắt đầu trang học');
+            }
+          });
+      } else {
+        console.log('Page already completed, skipping startPage API call');
+      }
     }
   }
   
@@ -1059,10 +1066,32 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    * Check if current viewing page is completed
    */
   isCurrentPageCompleted(): boolean {
-    if (!this.currentViewingPage) {
+    if (!this.currentViewingPage || !this.traineeLectureDetail) {
       return false;
     }
-    return this.completedPageIds.includes(this.currentViewingPage.id);
+    
+    // Sử dụng dữ liệu từ API thay vì mảng local
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(
+      pt => pt.lecturePageId === this.currentViewingPage!.id
+    );
+    
+    return pageTrainee?.statusLearn === 2; // CompletedLearn
+  }
+  
+  /**
+   * Check if should show complete button for current page
+   */
+  shouldShowCompleteButton(): boolean {
+    if (!this.currentViewingPage || !this.traineeLectureDetail) {
+      return false;
+    }
+    
+    // Chỉ hiển thị nút hoàn thành nếu trang chưa hoàn thành
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(
+      pt => pt.lecturePageId === this.currentViewingPage!.id
+    );
+    
+    return pageTrainee?.statusLearn !== 2; // Không phải CompletedLearn
   }
   
   /**

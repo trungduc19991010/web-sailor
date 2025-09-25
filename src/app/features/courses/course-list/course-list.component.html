@@ -386,6 +386,14 @@
                 <mat-icon>play_arrow</mat-icon>
                 Tiếp tục học
               </button>
+
+                <button mat-raised-button
+                      color="warn"
+                      *ngIf="canStartExam(course)"
+                      (click)="continueLearning(course)">
+                <mat-icon>replay</mat-icon>
+                {{ 'Học lại' }}
+              </button>
               
               <button mat-raised-button
                       color="warn"

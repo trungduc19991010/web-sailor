@@ -213,13 +213,13 @@ export function getStatusLearnColor(status: StatusLearn): string {
     case StatusLearn.Created:
       return 'basic';
     case StatusLearn.InProgressLearn:
-      return 'primary';
+      return 'blue';
     case StatusLearn.CompletedLearn:
-      return 'accent';
+      return 'green';
     case StatusLearn.InProgressExam:
-      return 'warn';
+      return 'red';
     case StatusLearn.CompletedExam:
-      return 'success';
+      return 'green';
     default:
       return 'basic';
   }

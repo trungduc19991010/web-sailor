@@ -326,7 +326,7 @@
                       <!-- Current Status -->
                       <div class="text-center">
                         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full" [class]="'bg-' + getCourseStatusColor() + '-100 text-' + getCourseStatusColor() + '-800'">
-                          <mat-icon class="text-lg">{{ getStatusIcon(traineeLectureDetail.statusLearn) }}</mat-icon>
+                          <mat-icon>{{ getStatusIcon(traineeLectureDetail.statusLearn) }}</mat-icon>
                           <span class="font-bold">{{ getCourseStatus() }}</span>
                         </div>
                       </div>
@@ -546,14 +546,6 @@
                           Bắt đầu học ngay
                         </button>
                         
-                        <!-- <button mat-raised-button 
-                                color="accent"
-                                class="px-8 py-3 text-lg font-semibold"
-                                *ngIf="isLearningStarted && getCurrentPageInfo().page && !isCurrentPageCompleted()"
-                                (click)="finishCurrentPage()">
-                          <mat-icon class="mr-3">check_circle</mat-icon>
-                          Hoàn thành trang này
-                        </button> -->
                         
                         <button mat-stroked-button 
                                 color="primary"
@@ -873,16 +865,6 @@
                     Bắt đầu học ngay
                   </button>
                   
-                  <!-- <button 
-                    mat-raised-button 
-                    color="accent"
-                    size="large"
-                    *ngIf="isLearningStarted && !isCurrentPageCompleted()"
-                    (click)="finishCurrentPage()"
-                    class="px-8 py-3">
-                    <mat-icon class="mr-2">check</mat-icon>
-                    Hoàn thành trang này
-                  </button> -->
                 </div>
                 
                 <!-- Complete Course Button (chỉ hiển thị khi tất cả trang đã hoàn thành) -->
@@ -1037,12 +1019,19 @@
               
               <button mat-raised-button 
                       color="accent"
-                      *ngIf="!isCurrentPageCompleted()"
+                      *ngIf="shouldShowCompleteButton()"
                       (click)="markPageCompleted()"
                       class="text-sm">
                 <mat-icon class="text-base mr-1">check</mat-icon>
                 Hoàn thành
               </button>
+              
+              <!-- Hiển thị trạng thái đã hoàn thành -->
+              <div *ngIf="isCurrentPageCompleted()" 
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold">
+                <mat-icon class="text-green-600">check_circle</mat-icon>
+                Đã hoàn thành
+              </div>
             </div>
           </div>
           
