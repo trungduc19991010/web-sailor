@@ -35,61 +35,256 @@
   <div class="course-content" *ngIf="!loading">
     <div class="container">
       
-      <!-- Filters section -->
-      <div class="filters-section">
-        <mat-card class="filters-card">
-          <mat-card-header>
-            <mat-card-title>
-              <mat-icon>filter_list</mat-icon>
-              Bộ lọc tìm kiếm
-            </mat-card-title>
-          </mat-card-header>
+      <!-- Modern Filters Section with Tailwind -->
+      <div class="mb-8">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          <!-- Filter Header -->
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg">
+                <mat-icon class="text-white text-xl">filter_list</mat-icon>
+              </div>
+              <div>
+                <h3 class="text-white text-lg font-semibold mb-1">Bộ lọc tìm kiếm</h3>
+                <p class="text-blue-100 text-sm">Lọc và tìm kiếm khóa học phù hợp</p>
+              </div>
+            </div>
+          </div>
           
-          <mat-card-content>
-            <div class="filters-grid">
-              <!-- Search Title -->
-              <mat-form-field appearance="outline" class="search-field">
-                <mat-label>Tìm kiếm theo tên</mat-label>
-                <input matInput 
-                       [(ngModel)]="searchTitle"
-                       (keyup.enter)="applyFilters()"
-                       placeholder="Nhập tên khóa học...">
-                <mat-icon matSuffix>search</mat-icon>
-              </mat-form-field>
+          <!-- Filter Content -->
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
+              
+              <!-- Search Input -->
+              <div class="col-span-1 md:col-span-2 lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  <mat-icon class="text-base mr-1 text-gray-500">search</mat-icon>
+                  Tìm kiếm theo tên
+                </label>
+                <div class="relative">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <input matInput 
+                           [(ngModel)]="searchTitle"
+                           (keyup.enter)="applyFilters()"
+                           placeholder="Nhập tên khóa học..."
+                           class="text-sm">
+                    <mat-icon matSuffix class="text-gray-400">search</mat-icon>
+                  </mat-form-field>
+                </div>
+              </div>
 
-              <!-- Status Learn filter -->
-              <mat-form-field appearance="outline">
-                <mat-label>Trạng thái học</mat-label>
-                <mat-select [(ngModel)]="selectedStatusLearn" 
-                           (ngModelChange)="applyFilters()">
-                  <mat-option *ngFor="let option of statusLearnOptions" [value]="option.value">
-                    {{ option.label }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
+              <!-- Status Filter -->
+              <div class="col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  <mat-icon class="text-base mr-1 text-gray-500">assignment</mat-icon>
+                  Trạng thái học
+                </label>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-select [(ngModel)]="selectedStatusLearn" 
+                             (ngModelChange)="applyFilters()"
+                             class="text-sm">
+                    <mat-option *ngFor="let option of statusLearnOptions" [value]="option.value">
+                      {{ option.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              
+              <!-- Quick Filter Buttons -->
+              <div class="col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  <mat-icon class="text-base mr-1 text-gray-500">flash_on</mat-icon>
+                  Lọc nhanh
+                </label>
+                <div class="flex flex-col gap-1">
+                  <!-- Đã tạo -->
+                  <button 
+                    mat-button 
+                    (click)="quickFilter('created')"
+                    [class]="selectedStatusLearn === 0 ? 'bg-gray-50 text-gray-700 border-gray-200' : 'text-gray-600 hover:bg-gray-50'"
+                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
+                    <mat-icon class="text-sm mr-1">fiber_new</mat-icon>
+                    Đã tạo
+                  </button>
+                  
+                  <!-- Đang học -->
+                  <button 
+                    mat-button 
+                    (click)="quickFilter('in-progress')"
+                    [class]="selectedStatusLearn === 1 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-gray-600 hover:bg-gray-50'"
+                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
+                    <mat-icon class="text-sm mr-1">play_arrow</mat-icon>
+                    Đang học
+                  </button>
+                  
+                  <!-- Hoàn thành học -->
+                  <button 
+                    mat-button 
+                    (click)="quickFilter('completed-learn')"
+                    [class]="selectedStatusLearn === 2 ? 'bg-green-50 text-green-700 border-green-200' : 'text-gray-600 hover:bg-gray-50'"
+                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
+                    <mat-icon class="text-sm mr-1">school</mat-icon>
+                    Hoàn thành học
+                  </button>
+                  
+                  <!-- Đang thi -->
+                  <button 
+                    mat-button 
+                    (click)="quickFilter('in-exam')"
+                    [class]="selectedStatusLearn === 3 ? 'bg-orange-50 text-orange-700 border-orange-200' : 'text-gray-600 hover:bg-gray-50'"
+                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
+                    <mat-icon class="text-sm mr-1">quiz</mat-icon>
+                    Đang thi
+                  </button>
+                  
+                  <!-- Hoàn thành thi -->
+                  <button 
+                    mat-button 
+                    (click)="quickFilter('completed-exam')"
+                    [class]="selectedStatusLearn === 4 ? 'bg-purple-50 text-purple-700 border-purple-200' : 'text-gray-600 hover:bg-gray-50'"
+                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
+                    <mat-icon class="text-sm mr-1">workspace_premium</mat-icon>
+                    Hoàn thành thi
+                  </button>
+                </div>
+              </div>
 
-              <!-- Clear filters button -->
-              <div class="filter-actions">
-                <button mat-button 
-                        color="warn" 
-                        (click)="clearFilters()">
-                  <mat-icon>clear</mat-icon>
-                  Xóa bộ lọc
+              <!-- Action Buttons -->
+              <div class="col-span-1 flex flex-col gap-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  <mat-icon class="text-base mr-1 text-gray-500">settings</mat-icon>
+                  Thao tác
+                </label>
+                
+                <!-- Apply Filters Button -->
+                <button 
+                  mat-raised-button 
+                  color="primary"
+                  (click)="applyFilters()"
+                  class="w-full text-xs py-2">
+                  <mat-icon class="text-base mr-1">search</mat-icon>
+                  Áp dụng
+                </button>
+                
+                <!-- Clear Filters Button -->
+                <button 
+                  mat-stroked-button 
+                  color="warn"
+                  (click)="clearFilters()"
+                  [disabled]="!searchTitle && !selectedStatusLearn"
+                  class="w-full text-xs py-2">
+                  <mat-icon class="text-base mr-1">clear</mat-icon>
+                  Xóa lọc
                 </button>
               </div>
             </div>
-          </mat-card-content>
-        </mat-card>
+            
+            <!-- Active Filters Display -->
+            <div class="mt-4 pt-4 border-t border-gray-200" *ngIf="searchTitle || selectedStatusLearn">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-medium text-gray-600">
+                  <mat-icon class="text-base mr-1">local_offer</mat-icon>
+                  Bộ lọc đang áp dụng:
+                </span>
+                
+                <!-- Search filter tag -->
+                <div *ngIf="searchTitle" class="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  <mat-icon class="text-sm">search</mat-icon>
+                  <span>"{{ searchTitle }}"</span>
+                  <button mat-icon-button (click)="clearSearchTitle()" class="w-5 h-5 text-blue-600 hover:text-blue-800">
+                    <mat-icon class="text-xs">close</mat-icon>
+                  </button>
+                </div>
+                
+                <!-- Status filter tag -->
+                <div *ngIf="selectedStatusLearn" class="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                  <mat-icon class="text-sm">assignment</mat-icon>
+                  <span>{{ getStatusLearnDisplayText(selectedStatusLearn) }}</span>
+                  <button mat-icon-button (click)="clearStatusLearn()" class="w-5 h-5 text-green-600 hover:text-green-800">
+                    <mat-icon class="text-xs">close</mat-icon>
+                  </button>
+                </div>
+                
+                <!-- Clear all button -->
+                <button 
+                  mat-button 
+                  (click)="clearFilters()"
+                  class="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded">
+                  <mat-icon class="text-sm mr-1">clear_all</mat-icon>
+                  Xóa tất cả
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Results summary -->
-      <div class="results-summary" *ngIf="myCourses.length > 0">
-        <p>
-          Hiển thị {{ myCourses.length }} khóa học của tôi
-          <span *ngIf="searchTitle || selectedStatusLearn">
-            (có áp dụng bộ lọc)
-          </span>
-        </p>
+      <!-- Modern Results Summary -->
+      <div class="mb-6" *ngIf="myCourses.length > 0">
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg px-4 py-3 border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
+                <mat-icon class="text-blue-600 text-lg">inventory</mat-icon>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-800 mb-0">
+                  Hiển thị 
+                  <span class="text-blue-600 font-bold">{{ myCourses.length }}</span> 
+                  khóa học
+                  <span *ngIf="searchTitle || selectedStatusLearn" class="text-orange-600 font-medium">
+                    (có bộ lọc)
+                  </span>
+                </p>
+                <p class="text-xs text-gray-600 mb-0" *ngIf="totalItems > myCourses.length">
+                  Trang {{ currentPage }} / {{ Math.ceil(totalItems / pageSize) }} • Tổng cộng {{ totalItems }} khóa học
+                </p>
+              </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex items-center gap-3 text-xs">
+              <!-- Đã tạo -->
+              <div class="text-center" *ngIf="getStatusCounts().created > 0">
+                <div class="text-sm font-bold text-gray-600">{{ getStatusCounts().created }}</div>
+                <div class="text-xs text-gray-500">Đã tạo</div>
+              </div>
+              
+              <!-- Đang học -->
+              <div class="text-center" *ngIf="getStatusCounts().inProgressLearn > 0">
+                <div class="text-sm font-bold text-blue-600">{{ getStatusCounts().inProgressLearn }}</div>
+                <div class="text-xs text-gray-500">Đang học</div>
+              </div>
+              
+              <!-- Hoàn thành học -->
+              <div class="text-center" *ngIf="getStatusCounts().completedLearn > 0">
+                <div class="text-sm font-bold text-green-600">{{ getStatusCounts().completedLearn }}</div>
+                <div class="text-xs text-gray-500">Hoàn thành học</div>
+              </div>
+              
+              <!-- Đang thi -->
+              <div class="text-center" *ngIf="getStatusCounts().inProgressExam > 0">
+                <div class="text-sm font-bold text-orange-600">{{ getStatusCounts().inProgressExam }}</div>
+                <div class="text-xs text-gray-500">Đang thi</div>
+              </div>
+              
+              <!-- Hoàn thành thi -->
+              <div class="text-center" *ngIf="getStatusCounts().completedExam > 0">
+                <div class="text-sm font-bold text-purple-600">{{ getStatusCounts().completedExam }}</div>
+                <div class="text-xs text-gray-500">Hoàn thành thi</div>
+              </div>
+              
+              <!-- Separator -->
+              <div class="w-px h-8 bg-gray-300 mx-2" *ngIf="myCourses.length > 0"></div>
+              
+              <!-- Total Summary -->
+              <div class="text-center">
+                <div class="text-sm font-bold text-gray-800">{{ myCourses.length }}</div>
+                <div class="text-xs text-gray-500">Tổng cộng</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- My Courses grid (TraineeLecture) -->
@@ -174,11 +369,6 @@
 
           <mat-card-actions>
             <div class="card-actions">
-              <button mat-button 
-                      (click)="viewTraineeLectureDetail(course)">
-                <mat-icon>visibility</mat-icon>
-                Chi tiết
-              </button>
               
               <!-- Action buttons based on status -->
               <button mat-raised-button
@@ -217,23 +407,73 @@
         </mat-card>
       </div>
 
-      <!-- Empty state -->
-      <div class="empty-state" *ngIf="myCourses.length === 0 && !loading">
-        <mat-icon>person_off</mat-icon>
-        <h3>Chưa có khóa học nào</h3>
-        <p *ngIf="searchTitle || selectedStatusLearn">
-          Không tìm thấy khóa học nào phù hợp với bộ lọc
-        </p>
-        <p *ngIf="!searchTitle && !selectedStatusLearn">
-          Bạn chưa đăng ký khóa học nào
-        </p>
-        <button mat-raised-button 
-                color="primary" 
-                (click)="clearFilters()"
-                *ngIf="searchTitle || selectedStatusLearn">
-          <mat-icon>clear</mat-icon>
-          Xóa bộ lọc
-        </button>
+      <!-- Modern Empty State -->
+      <div class="flex flex-col items-center justify-center py-16 px-4" *ngIf="myCourses.length === 0">
+        <div class="text-center max-w-md">
+          <!-- Empty Icon -->
+          <div class="flex items-center justify-center w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full">
+            <mat-icon class="text-gray-400 text-5xl" *ngIf="!searchTitle && !selectedStatusLearn">school_off</mat-icon>
+            <mat-icon class="text-orange-400 text-5xl" *ngIf="searchTitle || selectedStatusLearn">search_off</mat-icon>
+          </div>
+          
+          <!-- Empty Title -->
+          <h3 class="text-xl font-semibold text-gray-800 mb-3" *ngIf="!searchTitle && !selectedStatusLearn">
+            Chưa có khóa học nào
+          </h3>
+          <h3 class="text-xl font-semibold text-gray-800 mb-3" *ngIf="searchTitle || selectedStatusLearn">
+            Không tìm thấy kết quả
+          </h3>
+          
+          <!-- Empty Description -->
+          <div class="text-gray-600 mb-6 space-y-2">
+            <p *ngIf="!searchTitle && !selectedStatusLearn">
+              Bạn chưa đăng ký khóa học nào. 
+              <br>Hãy liên hệ quản trị viên để đăng ký khóa học mới.
+            </p>
+            <p *ngIf="searchTitle || selectedStatusLearn">
+              Không tìm thấy khóa học nào phù hợp với bộ lọc hiện tại.
+              <br>Hãy thử thay đổi điều kiện lọc hoặc xóa bộ lọc.
+            </p>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <!-- Clear Filters Button -->
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="clearFilters()"
+              *ngIf="searchTitle || selectedStatusLearn"
+              class="px-6 py-2">
+              <mat-icon class="mr-2">clear_all</mat-icon>
+              Xóa bộ lọc
+            </button>
+            
+            <!-- Refresh Button -->
+            <button 
+              mat-stroked-button 
+              color="primary" 
+              (click)="refreshCourses()"
+              class="px-6 py-2">
+              <mat-icon class="mr-2">refresh</mat-icon>
+              Làm mới
+            </button>
+          </div>
+          
+          <!-- Helpful Tips -->
+          <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 class="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-2">
+              <mat-icon class="text-blue-600 text-base">lightbulb</mat-icon>
+              Gợi ý
+            </h4>
+            <ul class="text-sm text-blue-700 space-y-1">
+              <li *ngIf="!searchTitle && !selectedStatusLearn">• Liên hệ quản trị viên để đăng ký khóa học</li>
+              <li *ngIf="searchTitle || selectedStatusLearn">• Thử sử dụng từ khóa khác hoặc bỏ chọn trạng thái</li>
+              <li>• Sử dụng nút "Làm mới" để cập nhật danh sách</li>
+              <li>• Kiểm tra kết nối mạng và thử lại</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <!-- Pagination -->

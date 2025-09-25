@@ -17,6 +17,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 // Import services và interfaces
 import { TraineeLectureService } from '../services/trainee-lecture.service';
+import { LectureDetailService } from '../services/lecture-detail.service';
 import { AuthenticationService } from '../../../core/guards/authentication.service';
 import { 
   TraineeLecture, 
@@ -79,6 +80,7 @@ export class CourseListComponent implements OnInit, OnDestroy {
 
   constructor(
     private traineeLectureService: TraineeLectureService,
+    private lectureDetailService: LectureDetailService,
     private authenticationService: AuthenticationService,
     private snackBar: MatSnackBar,
     private router: Router
@@ -201,6 +203,113 @@ export class CourseListComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Quick filter method - supports all status types
+   */
+  quickFilter(type: 'created' | 'in-progress' | 'completed-learn' | 'in-exam' | 'completed-exam'): void {
+    let targetStatus: StatusLearn;
+    
+    switch (type) {
+      case 'created':
+        targetStatus = StatusLearn.Created;
+        break;
+      case 'in-progress':
+        targetStatus = StatusLearn.InProgressLearn;
+        break;
+      case 'completed-learn':
+        targetStatus = StatusLearn.CompletedLearn;
+        break;
+      case 'in-exam':
+        targetStatus = StatusLearn.InProgressExam;
+        break;
+      case 'completed-exam':
+        targetStatus = StatusLearn.CompletedExam;
+        break;
+      default:
+        return;
+    }
+    
+    // Toggle: if already selected, clear it; otherwise set it
+    this.selectedStatusLearn = this.selectedStatusLearn === targetStatus ? '' : targetStatus;
+    this.applyFilters();
+  }
+
+  /**
+   * Clear search title only
+   */
+  clearSearchTitle(): void {
+    this.searchTitle = '';
+    this.applyFilters();
+  }
+
+  /**
+   * Clear status learn filter only
+   */
+  clearStatusLearn(): void {
+    this.selectedStatusLearn = '';
+    this.currentPage = 1;
+    this.loadMyCourses();
+  }
+
+  /**
+   * Get completed courses count for quick stats (CompletedExam)
+   */
+  getCompletedCoursesCount(): number {
+    return this.myCourses.filter(course => 
+      course.statusLearn === StatusLearn.CompletedExam
+    ).length;
+  }
+
+  /**
+   * Get in progress courses count for quick stats (InProgressLearn + InProgressExam)
+   */
+  getInProgressCoursesCount(): number {
+    return this.myCourses.filter(course => 
+      course.statusLearn === StatusLearn.InProgressLearn || 
+      course.statusLearn === StatusLearn.InProgressExam
+    ).length;
+  }
+
+  /**
+   * Get courses count by status for detailed stats
+   */
+  getStatusCounts() {
+    const counts = {
+      created: 0,
+      inProgressLearn: 0,
+      completedLearn: 0,
+      inProgressExam: 0,
+      completedExam: 0
+    };
+
+    this.myCourses.forEach(course => {
+      switch (course.statusLearn) {
+        case StatusLearn.Created:
+          counts.created++;
+          break;
+        case StatusLearn.InProgressLearn:
+          counts.inProgressLearn++;
+          break;
+        case StatusLearn.CompletedLearn:
+          counts.completedLearn++;
+          break;
+        case StatusLearn.InProgressExam:
+          counts.inProgressExam++;
+          break;
+        case StatusLearn.CompletedExam:
+          counts.completedExam++;
+          break;
+      }
+    });
+
+    return counts;
+  }
+
+  /**
+   * Math utility for template
+   */
+  Math = Math;
+
+  /**
    * Xử lý thay đổi trang
    */
   onPageChange(event: PageEvent): void {
@@ -215,7 +324,6 @@ export class CourseListComponent implements OnInit, OnDestroy {
   refreshCourses(): void {
     if (this.authenticationService.userTokenValue.token) {
       this.clearFilters();
-      this.traineeLectureService.refreshData();
     } else {
       this.showLoginRequiredMessage();
     }
@@ -280,8 +388,26 @@ export class CourseListComponent implements OnInit, OnDestroy {
    */
   startLearning(course: TraineeLecture): void {
     console.log('Bắt đầu học khóa học:', course);
-    // TODO: Implement navigation to learning interface
-    // this.router.navigate(['/learn', course.lectureId]);
+    
+    // Gọi API start để bắt đầu học
+    this.lectureDetailService.startLearning(course.lectureId).subscribe({
+      next: (response) => {
+        console.log('Bắt đầu học thành công:', response);
+        // Điều hướng sang trang chi tiết bài giảng với autoStart param
+        this.router.navigate(['/courses', course.lectureId], { 
+          queryParams: { autoStart: 'true' } 
+        });
+      },
+      error: (error) => {
+        console.error('Lỗi khi bắt đầu học:', error);
+        // Hiển thị thông báo lỗi
+        this.snackBar.open('Lỗi khi bắt đầu học. Vui lòng thử lại.', 'Đóng', {
+          duration: 3000,
+          horizontalPosition: 'center',
+          verticalPosition: 'top'
+        });
+      }
+    });
   }
 
   /**
@@ -289,7 +415,8 @@ export class CourseListComponent implements OnInit, OnDestroy {
    */
   continueLearning(course: TraineeLecture): void {
     console.log('Tiếp tục học khóa học:', course);
-    // TODO: Implement navigation to learning interface
+    // Điều hướng trực tiếp đến trang chi tiết bình thường
+    this.router.navigate(['/courses', course.lectureId]);
   }
 
   /**

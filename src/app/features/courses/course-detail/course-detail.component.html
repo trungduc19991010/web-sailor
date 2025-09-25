@@ -7,7 +7,7 @@
   </div>
 
   <!-- Course content -->
-  <div class="course-detail-content" *ngIf="!loading && course">
+  <div class="course-detail-content" *ngIf="!loading && traineeLectureDetail">
     <div class="container">
       
       <!-- Breadcrumb -->
@@ -22,66 +22,62 @@
       <div class="course-header">
         <div class="course-header-content">
           <div class="course-image">
-            <img [src]="course.imageUrl || 'assets/images/default-course.jpg'" 
-                 [alt]="course.title"
+            <img src="assets/images/default-course.jpg" 
+                 [alt]="traineeLectureDetail.lecture.courses.name"
                  onerror="this.src='assets/images/default-course.jpg'">
             
-            <!-- Status badge -->
-            <div class="status-badge" [ngClass]="'status-' + course.status">
-              {{ getStatusDisplayText(course.status) }}
+            <!-- Course code badge -->
+            <div class="status-badge course-code">
+              {{ traineeLectureDetail.lecture.courses.code }}
             </div>
           </div>
 
           <div class="course-info">
             <div class="course-meta">
-              <span class="category">{{ course.category }}</span>
-              <span class="level" [style.color]="getLevelColor(course.level)">
-                {{ getLevelDisplayText(course.level) }}
+              <span class="course-code">Mã: {{ traineeLectureDetail.lecture.courses.code }}</span>
+              <span class="course-days">
+                <mat-icon>schedule</mat-icon>
+                {{ traineeLectureDetail.lecture.courses.days }} ngày ({{ traineeLectureDetail.lecture.courses.halfDays }} buổi)
               </span>
             </div>
 
-            <h1>{{ course.title }}</h1>
-            <p class="course-description">{{ course.description }}</p>
+            <h1>{{ traineeLectureDetail.lecture.courses.name }}</h1>
+            <h2 class="english-name" *ngIf="traineeLectureDetail.lecture.courses.eName">{{ traineeLectureDetail.lecture.courses.eName }}</h2>
+            <p class="lecture-title">Chủ đề: {{ traineeLectureDetail.lecture.tittle }}</p>
+            <p class="course-description" *ngIf="traineeLectureDetail.lecture.description">{{ traineeLectureDetail.lecture.description }}</p>
 
             <div class="course-stats">
               <div class="stat-item">
-                <mat-icon>person</mat-icon>
-                <span>{{ course.instructor }}</span>
+                <mat-icon>schedule</mat-icon>
+                <span>{{ traineeLectureDetail.lecture.courses.houres }} giờ</span>
+              </div>
+              <div class="stat-item" *ngIf="traineeLectureDetail.lecture.courses.certCourse === 1">
+                <mat-icon>verified</mat-icon>
+                <span>Có chứng chỉ</span>
               </div>
               <div class="stat-item">
-                <mat-icon>schedule</mat-icon>
-                <span>{{ formatDuration(course.duration) }}</span>
+                <mat-icon>folder</mat-icon>
+                <span>{{ traineeLectureDetail.lecture.lecturePages.length }} tài liệu</span>
               </div>
-              <div class="stat-item" *ngIf="course.studentsCount">
-                <mat-icon>group</mat-icon>
-                <span>{{ course.studentsCount }} học viên</span>
-              </div>
-              <div class="stat-item" *ngIf="course.rating">
-                <mat-icon>star</mat-icon>
-                <span>{{ course.rating }}/5 ({{ course.reviewsCount || 0 }})</span>
+              <div class="stat-item">
+                <mat-icon>person</mat-icon>
+                <span>Trạng thái: {{ getCourseStatus() }}</span>
               </div>
             </div>
 
-            <!-- Price and enrollment -->
-            <div class="enrollment-section">
-              <div class="price-info">
-                <span class="price">{{ formatPrice(course.price) }}</span>
+            <!-- Additional info -->
+            <div class="additional-info" *ngIf="traineeLectureDetail.lecture.objects || traineeLectureDetail.lecture.note">
+              <div class="info-item" *ngIf="traineeLectureDetail.lecture.objects">
+                <strong>Đối tượng:</strong>
+                <span>{{ traineeLectureDetail.lecture.objects }}</span>
               </div>
-              
-              <div class="enrollment-actions">
-                <button mat-raised-button 
-                        color="primary" 
-                        [disabled]="course.status !== 'PUBLISHED' || enrolling"
-                        (click)="enrollCourse()">
-                  <mat-spinner diameter="20" *ngIf="enrolling"></mat-spinner>
-                  <mat-icon *ngIf="!enrolling">school</mat-icon>
-                  {{ enrolling ? 'Đang đăng ký...' : 'Đăng ký khóa học' }}
-                </button>
-                
-                <button mat-button (click)="shareCourse()">
-                  <mat-icon>share</mat-icon>
-                  Chia sẻ
-                </button>
+              <div class="info-item" *ngIf="traineeLectureDetail.lecture.note">
+                <strong>Ghi chú:</strong>
+                <span>{{ traineeLectureDetail.lecture.note }}</span>
+              </div>
+              <div class="info-item" *ngIf="traineeLectureDetail.lecture.courses.note">
+                <strong>Ghi chú khóa học:</strong>
+                <span>{{ traineeLectureDetail.lecture.courses.note }}</span>
               </div>
             </div>
 
@@ -112,70 +108,96 @@
                   <mat-card-content>
                     <div class="detail-list">
                       <div class="detail-item">
-                        <strong>Giảng viên:</strong>
-                        <span>{{ course.instructor }}</span>
+                        <strong>Mã khóa học:</strong>
+                        <span>{{ traineeLectureDetail.lecture.courses.code }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <strong>Tên tiếng Anh:</strong>
+                        <span>{{ traineeLectureDetail.lecture.courses.eName }}</span>
                       </div>
                       <div class="detail-item">
                         <strong>Thời lượng:</strong>
-                        <span>{{ formatDuration(course.duration) }}</span>
+                        <span>{{ traineeLectureDetail.lecture.courses.days }} ngày ({{ traineeLectureDetail.lecture.courses.houres }} giờ)</span>
                       </div>
                       <div class="detail-item">
-                        <strong>Cấp độ:</strong>
-                        <span [style.color]="getLevelColor(course.level)">
-                          {{ getLevelDisplayText(course.level) }}
-                        </span>
+                        <strong>Số buổi:</strong>
+                        <span>{{ traineeLectureDetail.lecture.courses.halfDays }} buổi</span>
+                      </div>
+                      <div class="detail-item">
+                        <strong>Chứng chỉ:</strong>
+                        <span>{{ traineeLectureDetail.lecture.courses.certCourse === 1 ? 'Có' : 'Không' }}</span>
                       </div>
                       <div class="detail-item">
                         <strong>Ngày tạo:</strong>
-                        <span>{{ course.createdAt | date:'dd/MM/yyyy' }}</span>
+                        <span>{{ traineeLectureDetail.lecture.created | date:'dd/MM/yyyy HH:mm' }}</span>
                       </div>
-                      <div class="detail-item" *ngIf="course.updatedAt">
+                      <div class="detail-item">
                         <strong>Cập nhật:</strong>
-                        <span>{{ course.updatedAt | date:'dd/MM/yyyy' }}</span>
+                        <span>{{ traineeLectureDetail.lecture.updated | date:'dd/MM/yyyy HH:mm' }}</span>
                       </div>
                     </div>
                   </mat-card-content>
                 </mat-card>
 
-                <!-- Prerequisites -->
-                <mat-card class="prerequisites-card" *ngIf="course.prerequisites && course.prerequisites.length > 0">
+                <!-- Lecture info -->
+                <mat-card class="lecture-info-card">
                   <mat-card-header>
-                    <mat-card-title>Yêu cầu trước khi học</mat-card-title>
+                    <mat-card-title>Thông tin bài giảng</mat-card-title>
                   </mat-card-header>
                   <mat-card-content>
-                    <ul>
-                      <li *ngFor="let prerequisite of course.prerequisites">
-                        {{ prerequisite }}
-                      </li>
-                    </ul>
+                    <div class="detail-list">
+                      <div class="detail-item" *ngIf="traineeLectureDetail.lecture.objects">
+                        <strong>Đối tượng học:</strong>
+                        <span>{{ traineeLectureDetail.lecture.objects }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="traineeLectureDetail.lecture.description">
+                        <strong>Mô tả:</strong>
+                        <span>{{ traineeLectureDetail.lecture.description }}</span>
+                      </div>
+                      <div class="detail-item" *ngIf="traineeLectureDetail.lecture.note">
+                        <strong>Ghi chú:</strong>
+                        <span>{{ traineeLectureDetail.lecture.note }}</span>
+                      </div>
+                    </div>
                   </mat-card-content>
                 </mat-card>
 
-                <!-- Learning outcomes -->
-                <mat-card class="outcomes-card" *ngIf="course.learningOutcomes && course.learningOutcomes.length > 0">
+                <!-- Trainee status -->
+                <mat-card class="trainee-status-card">
                   <mat-card-header>
-                    <mat-card-title>Kết quả học tập</mat-card-title>
+                    <mat-card-title>Trạng thái học tập</mat-card-title>
                   </mat-card-header>
                   <mat-card-content>
-                    <ul>
-                      <li *ngFor="let outcome of course.learningOutcomes">
-                        {{ outcome }}
-                      </li>
-                    </ul>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Tags -->
-                <mat-card class="tags-card" *ngIf="course.tags && course.tags.length > 0">
-                  <mat-card-header>
-                    <mat-card-title>Từ khóa</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <mat-chip-set>
-                      <mat-chip *ngFor="let tag of course.tags">
-                        {{ tag }}
-                      </mat-chip>
-                    </mat-chip-set>
+                    <div class="trainee-info">
+                      <div class="trainee-basic-info">
+                        <strong>Trạng thái học tập:</strong> 
+                        <span class="status-badge" [ngClass]="'status-' + getCourseStatusColor()">
+                          {{ getCourseStatus() }}
+                        </span>
+                      </div>
+                      <div class="trainee-timeline" *ngIf="traineeLectureDetail.timetStartLearn || traineeLectureDetail.timeCompletedLearn">
+                        <div *ngIf="traineeLectureDetail.timetStartLearn">
+                          <strong>Bắt đầu học:</strong> {{ traineeLectureDetail.timetStartLearn | date:'dd/MM/yyyy HH:mm' }}
+                        </div>
+                        <div *ngIf="traineeLectureDetail.timeCompletedLearn">
+                          <strong>Hoàn thành:</strong> {{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}
+                        </div>
+                      </div>
+                      
+                      <!-- Learning progress summary -->
+                      <div class="learning-summary" *ngIf="traineeLectureDetail.lecturePageTrainees && traineeLectureDetail.lecturePageTrainees.length > 0">
+                        <div class="progress-overview">
+                          <strong>Tiến độ học tập:</strong>
+                          <div class="progress-stats">
+                            <span class="completed-count">{{ getCompletedPagesCount() }}/{{ traineeLectureDetail.lecture.lecturePages.length }} tài liệu đã hoàn thành</span>
+                            <div class="progress-bar-mini">
+                              <div class="progress-fill" [style.width.%]="getOverallProgress()"></div>
+                            </div>
+                            <span class="progress-percentage">{{ getOverallProgress() }}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </mat-card-content>
                 </mat-card>
               </div>
@@ -183,127 +205,741 @@
           </mat-tab>
 
           <!-- Curriculum tab -->
-          <mat-tab label="Chương trình học">
-            <div class="tab-content">
-              <div class="curriculum-content">
+          <mat-tab label="Tài liệu học tập">
+            <div class="tab-content documents-tab">
+              <div class="documents-tab-container">
                 
                 <!-- Login required message -->
                 <div class="login-required" *ngIf="!canAccessContent()">
-                  <mat-card class="warning-card">
-                    <mat-card-content>
-                      <div class="warning-content">
-                        <mat-icon>lock</mat-icon>
-                        <h3>Yêu cầu đăng nhập</h3>
-                        <p>Vui lòng đăng nhập để xem nội dung chi tiết của khóa học</p>
-                        <button mat-raised-button color="primary" (click)="enrollCourse()">
-                          Đăng nhập ngay
-                        </button>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
+                  <div class="access-card">
+                    <div class="access-icon">
+                      <mat-icon>lock_outline</mat-icon>
+                    </div>
+                    <h3>Nội dung được bảo vệ</h3>
+                    <p>Đăng nhập để truy cập danh sách tài liệu học tập đầy đủ</p>
+                    <button mat-raised-button color="primary" (click)="enrollCourse()">
+                      <mat-icon>login</mat-icon>
+                      Đăng nhập ngay
+                    </button>
+                  </div>
                 </div>
 
-                <!-- Syllabus content -->
-                <div class="syllabus-content" *ngIf="canAccessContent() && course.syllabus">
-                  <mat-accordion>
-                    <mat-expansion-panel *ngFor="let section of course.syllabus">
-                      <mat-expansion-panel-header>
-                        <mat-panel-title>
-                          {{ section.title }}
-                        </mat-panel-title>
-                        <mat-panel-description>
-                          {{ formatDuration(section.duration) }} • {{ section.lessons.length }} bài học
-                        </mat-panel-description>
-                      </mat-expansion-panel-header>
-
-                      <div class="section-content">
-                        <p class="section-description">{{ section.description }}</p>
-                        
-                        <div class="lessons-list">
-                          <div class="lesson-item" 
-                               *ngFor="let lesson of section.lessons"
-                               [class.completed]="isLessonCompleted(lesson.id)">
-                            
-                            <div class="lesson-info">
-                              <div class="lesson-icon">
-                                <mat-icon *ngIf="lesson.type === 'video'">play_circle</mat-icon>
-                                <mat-icon *ngIf="lesson.type === 'document'">description</mat-icon>
-                                <mat-icon *ngIf="lesson.type === 'quiz'">quiz</mat-icon>
-                                <mat-icon *ngIf="lesson.type === 'assignment'">assignment</mat-icon>
-                              </div>
-                              
-                              <div class="lesson-details">
-                                <h4>{{ lesson.title }}</h4>
-                                <p>{{ lesson.description }}</p>
-                                <span class="lesson-duration">{{ formatDuration(lesson.duration) }}</span>
-                              </div>
+                <!-- Documents Content -->
+                <div class="max-w-7xl mx-auto px-6 py-8 space-y-8" *ngIf="canAccessContent()">
+                  
+                  <!-- Course Statistics -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-2xl">analytics</mat-icon>
+                        </div>
+                        <h3 class="text-2xl font-bold">Thống kê khóa học</h3>
+                      </div>
+                    </div>
+                    
+                    <div class="p-8">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Total Documents -->
+                        <div class="bg-blue-50 rounded-xl p-6 border border-blue-100 hover:shadow-md transition-shadow">
+                          <div class="flex items-center gap-4">
+                            <div class="p-3 bg-blue-500 rounded-xl">
+                              <mat-icon class="text-white text-2xl">folder_copy</mat-icon>
                             </div>
-
-                            <div class="lesson-actions">
-                              <button mat-icon-button 
-                                      *ngIf="lesson.type === 'video' && lesson.videoUrl"
-                                      (click)="playVideo(lesson.videoUrl)"
-                                      matTooltip="Xem video">
-                                <mat-icon>play_arrow</mat-icon>
-                              </button>
-                              
-                              <button mat-icon-button 
-                                      *ngIf="lesson.type === 'document' && lesson.documentUrl"
-                                      (click)="viewDocument(lesson.documentUrl)"
-                                      matTooltip="Xem tài liệu">
-                                <mat-icon>visibility</mat-icon>
-                              </button>
-                              
-                              <button mat-icon-button 
-                                      [color]="isLessonCompleted(lesson.id) ? 'primary' : ''"
-                                      (click)="markLessonCompleted(lesson.id)"
-                                      matTooltip="Đánh dấu hoàn thành">
-                                <mat-icon>{{ isLessonCompleted(lesson.id) ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-                              </button>
+                            <div>
+                              <div class="text-3xl font-bold text-blue-700">{{ getTotalPagesCount() }}</div>
+                              <div class="text-sm font-medium text-blue-600">Tổng tài liệu</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Completed Documents -->
+                        <div class="bg-green-50 rounded-xl p-6 border border-green-100 hover:shadow-md transition-shadow">
+                          <div class="flex items-center gap-4">
+                            <div class="p-3 bg-green-500 rounded-xl">
+                              <mat-icon class="text-white text-2xl">check_circle</mat-icon>
+                            </div>
+                            <div>
+                              <div class="text-3xl font-bold text-green-700">{{ getCompletedPagesCount() }}</div>
+                              <div class="text-sm font-medium text-green-600">Đã hoàn thành</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Progress Percentage -->
+                        <div class="bg-orange-50 rounded-xl p-6 border border-orange-100 hover:shadow-md transition-shadow">
+                          <div class="flex items-center gap-4">
+                            <div class="p-3 bg-orange-500 rounded-xl">
+                              <mat-icon class="text-white text-2xl">trending_up</mat-icon>
+                            </div>
+                            <div>
+                              <div class="text-3xl font-bold text-orange-700">{{ getCompletionPercentage() }}%</div>
+                              <div class="text-sm font-medium text-orange-600">Tiến độ</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Duration -->
+                        <div class="bg-purple-50 rounded-xl p-6 border border-purple-100 hover:shadow-md transition-shadow">
+                          <div class="flex items-center gap-4">
+                            <div class="p-3 bg-purple-500 rounded-xl">
+                              <mat-icon class="text-white text-2xl">schedule</mat-icon>
+                            </div>
+                            <div>
+                              <div class="text-3xl font-bold text-purple-700">{{ traineeLectureDetail.lecture.courses.houres }}</div>
+                              <div class="text-sm font-medium text-purple-600">Giờ học</div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </mat-expansion-panel>
-                  </mat-accordion>
+                      
+                      <!-- Overall Progress Bar -->
+                      <div class="bg-gray-50 rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                          <h4 class="text-lg font-semibold text-gray-800">Tiến độ tổng thể</h4>
+                          <span class="text-2xl font-bold text-blue-600">{{ getCompletionPercentage() }}%</span>
+                        </div>
+                        <div class="relative">
+                          <mat-progress-bar 
+                            mode="determinate" 
+                            [value]="getCompletionPercentage()"
+                            class="h-4 rounded-full overflow-hidden">
+                          </mat-progress-bar>
+                          <div class="flex justify-between items-center mt-3 text-sm text-gray-600">
+                            <span>{{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} tài liệu hoàn thành</span>
+                            <span class="font-medium" [class]="'text-' + getCourseStatusColor() + '-600'">{{ getCourseStatus() }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Learning Control Section -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-2xl">play_lesson</mat-icon>
+                        </div>
+                        <h3 class="text-2xl font-bold">Điều khiển học tập</h3>
+                      </div>
+                    </div>
+                    
+                    <div class="p-8 space-y-6">
+                      <!-- Current Status Display -->
+                      <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
+                        <div class="flex items-center gap-6">
+                          <div class="p-4 rounded-xl" [class]="'bg-' + getCourseStatusColor() + '-500'">
+                            <mat-icon class="text-white text-3xl">{{ getStatusIcon(traineeLectureDetail?.statusLearn) }}</mat-icon>
+                          </div>
+                          <div class="flex-1">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">{{ getCourseStatus() }}</h4>
+                            <p class="text-gray-600 leading-relaxed">{{ getStatusDescription(traineeLectureDetail?.statusLearn) }}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Current Page Info -->
+                      <div class="space-y-4" *ngIf="isLearningStarted">
+                        <div class="bg-white border-2 border-blue-200 rounded-xl p-6" *ngIf="getCurrentPageInfo().page; else completedMessage">
+                          <div class="flex items-center gap-4">
+                            <div class="p-3 rounded-xl" [style.background-color]="getTypeColor(getCurrentPageInfo().page!.typeLecturePage) + '20'">
+                              <mat-icon class="text-2xl" [style.color]="getTypeColor(getCurrentPageInfo().page!.typeLecturePage)">
+                                {{ getLecturePageTypeIcon(getCurrentPageInfo().page!.typeLecturePage) }}
+                              </mat-icon>
+                            </div>
+                            <div class="flex-1">
+                              <h4 class="text-lg font-semibold text-gray-800 mb-1">Tài liệu hiện tại</h4>
+                              <h5 class="text-xl font-bold text-gray-900 mb-2">{{ getCurrentPageInfo().page?.tittle }}</h5>
+                              <p class="text-sm text-gray-600">
+                                {{ getLecturePageTypeDisplayText(getCurrentPageInfo().page!.typeLecturePage) }} • 
+                                Trang {{ getCurrentPageInfo().current }}/{{ getCurrentPageInfo().total }}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <ng-template #completedMessage>
+                          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center">
+                            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-4">
+                              <mat-icon class="text-white text-4xl">celebration</mat-icon>
+                            </div>
+                            <h4 class="text-2xl font-bold text-green-800 mb-2">Hoàn thành xuất sắc!</h4>
+                            <p class="text-green-700 text-lg">Bạn đã hoàn thành {{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} tài liệu.</p>
+                          </div>
+                        </ng-template>
+                      </div>
+                      
+                      <!-- Action Buttons -->
+                      <div class="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
+                        <button mat-raised-button 
+                                color="primary"
+                                class="px-8 py-3 text-lg font-semibold"
+                                *ngIf="!isLearningStarted && canStartLearning()"
+                                (click)="startLearning()">
+                          <mat-icon class="mr-3">play_arrow</mat-icon>
+                          Bắt đầu học ngay
+                        </button>
+                        
+                        <button mat-raised-button 
+                                color="accent"
+                                class="px-8 py-3 text-lg font-semibold"
+                                *ngIf="isLearningStarted && getCurrentPageInfo().page && !isCurrentPageCompleted()"
+                                (click)="finishCurrentPage()">
+                          <mat-icon class="mr-3">check_circle</mat-icon>
+                          Hoàn thành trang này
+                        </button>
+                        
+                        <button mat-stroked-button 
+                                color="primary"
+                                class="px-6 py-3"
+                                *ngIf="getCompletedPagesCount() > 0">
+                          <mat-icon class="mr-2">replay</mat-icon>
+                          Ôn tập lại
+                        </button>
+                        
+                        <!-- Complete Course Button -->
+                        <button mat-raised-button 
+                                color="warn"
+                                class="px-12 py-4 text-xl font-bold"
+                                *ngIf="areAllPagesCompleted() && !isCourseCompleted()"
+                                (click)="finishCourse()">
+                          <mat-icon class="mr-3 text-2xl">emoji_events</mat-icon>
+                          Hoàn thành khóa học
+                        </button>
+                      </div>
+                      
+                      <!-- Course Completed Message -->
+                      <div class="text-center" *ngIf="isCourseCompleted()">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8">
+                          <div class="inline-flex items-center justify-center w-24 h-24 bg-green-500 rounded-full mb-6">
+                            <mat-icon class="text-white text-5xl">celebration</mat-icon>
+                          </div>
+                          <h3 class="text-3xl font-bold text-green-800 mb-3">Chúc mừng!</h3>
+                          <p class="text-green-700 text-xl mb-4">Bạn đã hoàn thành khóa học này thành công!</p>
+                          <div class="inline-flex items-center gap-2 text-green-600 font-medium" *ngIf="traineeLectureDetail.timeCompletedLearn">
+                            <mat-icon class="text-lg">event</mat-icon>
+                            <span>Hoàn thành vào: {{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- User Guide Section -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-2xl">help_outline</mat-icon>
+                        </div>
+                        <h3 class="text-2xl font-bold">Hướng dẫn sử dụng</h3>
+                      </div>
+                    </div>
+                    
+                    <div class="p-8">
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Guide Steps -->
+                        <div class="space-y-6">
+                          <h4 class="text-xl font-bold text-gray-800 mb-6">Các bước thực hiện</h4>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              1
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Tìm tài liệu</h5>
+                              <p class="text-gray-600 leading-relaxed">Sử dụng sidebar bên trái để xem danh sách tất cả tài liệu cùng với trạng thái hoàn thành</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              2
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Mở viewer</h5>
+                              <p class="text-gray-600 leading-relaxed">Click "Xem tài liệu" để mở viewer toàn màn hình với các tính năng tương tác</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-red-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              3
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Theo dõi tiến độ</h5>
+                              <p class="text-gray-600 leading-relaxed">Đánh dấu hoàn thành từng tài liệu và xem tiến độ cập nhật theo thời gian thực</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-purple-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              4
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Hoàn thành khóa học</h5>
+                              <p class="text-gray-600 leading-relaxed">Sau khi hoàn thành tất cả tài liệu, nhấn nút "Hoàn thành khóa học" để kết thúc</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Quick Tips -->
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                          <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                            <mat-icon class="text-blue-600">lightbulb</mat-icon>
+                            Mẹo học tập hiệu quả
+                          </h4>
+                          <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Học theo thứ tự từ trang 1 để đảm bảo kiến thức liền mạch và dễ hiểu</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Tận dụng các tính năng navigation để chuyển nhanh giữa các trang</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Kiểm tra tiến độ thường xuyên qua thanh progress bar</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Ôn tập lại các tài liệu đã hoàn thành để củng cố kiến thức</p>
+                            </div>
+                          </div>
+                          
+                          <!-- Contact Support -->
+                          <div class="mt-6 pt-6 border-t border-blue-200">
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                              <mat-icon class="text-lg">support_agent</mat-icon>
+                              <span class="font-semibold">Cần hỗ trợ?</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Liên hệ với chúng tôi nếu bạn gặp khó khăn trong quá trình học tập</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                 </div>
               </div>
             </div>
           </mat-tab>
-
-          <!-- Media viewer tab -->
-          <mat-tab label="Nội dung học" *ngIf="canAccessContent()">
-            <div class="tab-content">
-              <div class="media-viewer">
-                
-                <!-- Video player -->
-                <div class="video-player" *ngIf="showVideoPlayer && currentVideoUrl">
-                  <iframe [src]="currentVideoUrl"
-                          class="video-iframe"
-                          frameborder="0"
-                          allowfullscreen>
-                  </iframe>
-                </div>
-
-                <!-- Document viewer -->
-                <div class="document-viewer" *ngIf="showDocumentViewer && currentDocumentUrl">
-                  <iframe [src]="currentDocumentUrl"
-                          class="document-iframe"
-                          frameborder="0">
-                  </iframe>
-                </div>
-
-                <!-- No content selected -->
-                <div class="no-content" *ngIf="!showVideoPlayer && !showDocumentViewer">
-                  <mat-icon>touch_app</mat-icon>
-                  <h3>Chọn nội dung để học</h3>
-                  <p>Vui lòng chọn video hoặc tài liệu từ chương trình học để bắt đầu</p>
-                </div>
-              </div>
-            </div>
-          </mat-tab>
+          
         </mat-tab-group>
       </div>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 min-h-screen" *ngIf="!showLectureViewer">
+        
+        <!-- Documents Sidebar (Left Column) -->
+        <div class="lg:col-span-1 bg-gray-50 border-r border-gray-200 flex flex-col shadow-lg">
+          <!-- Sidebar Header -->
+          <div class="p-5 border-b border-gray-200 bg-white">
+            <div class="flex items-center gap-3 mb-3">
+              <mat-icon class="text-primary-600 text-2xl">folder</mat-icon>
+              <h3 class="text-lg font-semibold text-gray-800 m-0">Tài liệu học tập</h3>
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="text-sm font-medium text-gray-600">{{ getTotalPagesCount() }} tài liệu</span>
+              <span class="text-xs font-semibold text-green-600">{{ getCompletedPagesCount() }} hoàn thành</span>
+            </div>
+          </div>
+          
+          <!-- Progress Section -->
+          <div class="px-5 py-4 bg-white border-b border-gray-200">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-sm font-medium text-gray-700">Tiến độ học tập</span>
+              <span class="text-sm font-bold text-primary-600">{{ getCompletionPercentage() }}%</span>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="getCompletionPercentage()" class="h-2 rounded-md">
+            </mat-progress-bar>
+            <div class="flex justify-between items-center mt-1">
+              <span class="text-xs text-gray-500">{{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} trang hoàn thành</span>
+              <span class="text-xs font-medium" [class]="'text-' + getCourseStatusColor() + '-600'">{{ getCourseStatus() }}</span>
+            </div>
+          </div>
+          
+          <!-- Pages List -->
+          <div class="flex-1 overflow-y-auto p-3 space-y-2">
+            <mat-card 
+              *ngFor="let page of getSortedPages(); trackBy: trackByPageId"
+              [class]="'cursor-pointer transition-all duration-300 hover:shadow-md ' + 
+                       (completedPageIds.includes(page.id) ? 'bg-accent-50 border-accent-300' : '') +
+                       (currentLearningPageId === page.id ? ' bg-orange-50 border-orange-300' : '')"
+              class="mb-2 border-2 border-transparent rounded-lg">
+              
+              <!-- Status Indicator based on StatusLearn -->
+              <div class="absolute top-3 right-3">
+                <mat-icon *ngIf="isPageCompleted(page)" class="text-green-500 text-lg">check_circle</mat-icon>
+                <mat-icon *ngIf="isPageInProgress(page)" class="text-blue-500 text-lg animate-pulse">play_circle</mat-icon>
+                <mat-icon *ngIf="!isPageCompleted(page) && !isPageInProgress(page)" class="text-gray-400 text-lg">radio_button_unchecked</mat-icon>
+              </div>
+              
+              <mat-card-header class="pb-2">
+                <div mat-card-avatar [class]="'flex items-center justify-center w-10 h-10 rounded-full ' +
+                                            (isPageCompleted(page) ? 'bg-green-500' : 
+                                            (isPageInProgress(page) ? 'bg-blue-500' : 'bg-gray-400'))">
+                  <mat-icon class="text-white text-lg">{{ getLecturePageTypeIcon(page.typeLecturePage) }}</mat-icon>
+                </div>
+                <mat-card-title class="text-sm font-semibold text-gray-800 line-clamp-2">{{ page.tittle }}</mat-card-title>
+                <mat-card-subtitle class="text-xs text-gray-600">
+                  {{ getLecturePageTypeDisplayText(page.typeLecturePage) }} • Trang {{ page.pageNumber }}
+                  <span [class]="'font-medium text-' + getPageStatusColor(page) + '-600'"> • {{ getPageStatus(page) }}</span>
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content class="py-2">
+                <p *ngIf="page.description" class="text-xs text-gray-600 line-clamp-2 mb-2">{{ page.description }}</p>
+                <div class="flex items-center gap-3 text-xs text-gray-500">
+                  <span class="flex items-center gap-1">
+                    <mat-icon class="text-sm" [style.color]="getTypeColor(page.typeLecturePage)">{{ getLecturePageTypeIcon(page.typeLecturePage) }}</mat-icon>
+                    {{ getLecturePageTypeDisplayText(page.typeLecturePage) }}
+                  </span>
+                </div>
+              </mat-card-content>
+
+              <mat-card-actions class="p-3 pt-0">
+                <div class="flex gap-2">
+                  <button 
+                    mat-raised-button 
+                    color="primary"
+                    size="small"
+                    (click)="viewLecturePage(page)"
+                    [disabled]="!page.storageURL"
+                    class="flex-1 text-xs">
+                    <mat-icon class="text-sm mr-1">visibility</mat-icon>
+                    Xem
+                  </button>
+                  <button 
+                    mat-icon-button 
+                    (click)="openInNewTab(page.storageURL)"
+                    [disabled]="!page.storageURL"
+                    matTooltip="Mở trong tab mới"
+                    class="w-8 h-8">
+                    <mat-icon class="text-sm">open_in_new</mat-icon>
+                  </button>
+                </div>
+              </mat-card-actions>
+            </mat-card>
+            
+            <!-- Empty State -->
+            <div *ngIf="traineeLectureDetail.lecture.lecturePages.length === 0" 
+                 class="flex flex-col items-center justify-center py-10 text-center text-gray-500">
+              <mat-icon class="text-5xl mb-3 opacity-50">folder_open</mat-icon>
+              <h3 class="text-base font-medium mb-2">Chưa có tài liệu</h3>
+              <p class="text-sm">Khóa học này chưa có tài liệu học tập</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Main Content Area (Right Columns) -->
+        <div class="lg:col-span-3 bg-white flex flex-col overflow-auto">
+          <div class="p-8 max-w-4xl mx-auto w-full">
+            
+            <!-- Welcome Header -->
+            <div class="text-center mb-8">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
+                <mat-icon>school</mat-icon>
+              </div>
+              <h2 class="text-3xl font-bold text-gray-800 mb-2">Xin chào! Hãy bắt đầu học tập</h2>
+              <p class="text-gray-600">Chọn tài liệu từ sidebar để bắt đầu hành trình học tập của bạn</p>
+            </div>
+            
+            <!-- Course Overview -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ traineeLectureDetail.lecture.courses.name }}</h3>
+              <p class="text-lg text-gray-600 mb-6">{{ traineeLectureDetail.lecture.tittle }}</p>
+              
+              <!-- Quick Stats Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-primary-50 rounded-lg p-4 flex items-center gap-3">
+                  <div class="flex items-center justify-center w-12 h-12 bg-primary-100 rounded-lg">
+                    <mat-icon class="text-primary-600 text-xl">folder</mat-icon>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-primary-700">{{ getTotalPagesCount() }}</div>
+                    <div class="text-sm text-primary-600 font-medium">Tài liệu</div>
+                  </div>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4 flex items-center gap-3">
+                  <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
+                    <mat-icon class="text-green-600 text-xl">check_circle</mat-icon>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-green-700">{{ getCompletedPagesCount() }}</div>
+                    <div class="text-sm text-green-600 font-medium">Hoàn thành</div>
+                  </div>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg p-4 flex items-center gap-3">
+                  <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg">
+                    <mat-icon class="text-purple-600 text-xl">schedule</mat-icon>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-bold text-purple-700">{{ traineeLectureDetail.lecture.courses.houres }}</div>
+                    <div class="text-sm text-purple-600 font-medium">Giờ</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Progress Section -->
+              <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="flex justify-between items-center mb-2">
+                  <h4 class="text-lg font-semibold text-gray-800">Tiến độ học tập</h4>
+                  <span class="text-lg font-bold text-primary-600">{{ getCompletionPercentage() }}%</span>
+                </div>
+                <mat-progress-bar mode="determinate" [value]="getCompletionPercentage()" class="h-3 rounded-full"></mat-progress-bar>
+                <div class="flex justify-between items-center mt-2">
+                  <p class="text-sm text-gray-600">{{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} tài liệu đã hoàn thành</p>
+                  <span class="text-sm font-semibold" [class]="'text-' + getCourseStatusColor() + '-600'">{{ getCourseStatus() }}</span>
+                </div>
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="flex flex-col gap-3 items-center">
+                <!-- Primary Actions -->
+                <div class="flex gap-3 justify-center">
+                  <button 
+                    mat-raised-button 
+                    color="primary"
+                    size="large"
+                    *ngIf="!isLearningStarted && canStartLearning()"
+                    (click)="startLearning()"
+                    class="px-8 py-3">
+                    <mat-icon class="mr-2">play_arrow</mat-icon>
+                    Bắt đầu học ngay
+                  </button>
+                  
+                  <button 
+                    mat-raised-button 
+                    color="accent"
+                    size="large"
+                    *ngIf="isLearningStarted && !isCurrentPageCompleted()"
+                    (click)="finishCurrentPage()"
+                    class="px-8 py-3">
+                    <mat-icon class="mr-2">check</mat-icon>
+                    Hoàn thành trang này
+                  </button>
+                </div>
+                
+                <!-- Complete Course Button (chỉ hiển thị khi tất cả trang đã hoàn thành) -->
+                <div *ngIf="areAllPagesCompleted() && !isCourseCompleted()" class="mt-4">
+                  <button 
+                    mat-raised-button 
+                    color="warn"
+                    size="large"
+                    (click)="finishCourse()"
+                    class="px-12 py-4 text-lg font-bold">
+                    <mat-icon class="mr-3">emoji_events</mat-icon>
+                    Hoàn thành khóa học
+                  </button>
+                </div>
+                
+                <!-- Course Completed Message -->
+                <div *ngIf="isCourseCompleted()" class="mt-4 text-center">
+                  <div class="bg-green-50 border border-green-200 rounded-xl p-6">
+                    <mat-icon class="text-green-500 text-5xl mb-2">celebration</mat-icon>
+                    <h3 class="text-xl font-bold text-green-800 mb-2">Chúc mừng!</h3>
+                    <p class="text-green-700">Bạn đã hoàn thành khóa học này thành công!</p>
+                    <div class="text-sm text-green-600 mt-2" *ngIf="traineeLectureDetail.timeCompletedLearn">
+                      Hoàn thành vào: {{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Instructions Section -->
+            <div class="bg-blue-50 rounded-xl p-6">
+              <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <mat-icon class="text-primary-600">help_outline</mat-icon>
+                Hướng dẫn sử dụng
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3">
+                  <div class="flex items-start gap-3">
+                    <div class="flex items-center justify-center w-6 h-6 bg-primary-600 text-white rounded-full text-sm font-bold flex-shrink-0">1</div>
+                    <div>
+                      <h5 class="font-medium text-gray-800">Chọn tài liệu</h5>
+                      <p class="text-sm text-gray-600">Sử dụng sidebar bên trái để xem danh sách tất cả tài liệu</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="flex items-center justify-center w-6 h-6 bg-primary-600 text-white rounded-full text-sm font-bold flex-shrink-0">2</div>
+                    <div>
+                      <h5 class="font-medium text-gray-800">Mở viewer</h5>
+                      <p class="text-sm text-gray-600">Click "Xem tài liệu" để mở viewer tương tác</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex items-start gap-3">
+                    <div class="flex items-center justify-center w-6 h-6 bg-primary-600 text-white rounded-full text-sm font-bold flex-shrink-0">3</div>
+                    <div>
+                      <h5 class="font-medium text-gray-800">Theo dõi tiến độ</h5>
+                      <p class="text-sm text-gray-600">Đánh dấu hoàn thành từng tài liệu</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="flex items-center justify-center w-6 h-6 bg-primary-600 text-white rounded-full text-sm font-bold flex-shrink-0">4</div>
+                    <div>
+                      <h5 class="font-medium text-gray-800">Thao tác nhanh</h5>
+                      <p class="text-sm text-gray-600">Sử dụng navigation để chuyển giữa các trang</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      
+      <!-- Lecture Page Viewer with Tailwind -->
+      <div class="fixed inset-0 bg-white z-50 flex flex-col" *ngIf="showLectureViewer && currentViewingPage">
+        
+        <!-- Header -->
+        <div class="bg-white border-b border-gray-200 shadow-sm px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <button mat-icon-button (click)="closeLectureViewer()" class="text-gray-600 hover:text-gray-800">
+              <mat-icon>close</mat-icon>
+            </button>
+            <div>
+              <h2 class="text-lg font-semibold text-gray-800 line-clamp-1">{{ traineeLectureDetail.lecture.courses.name }}</h2>
+              <p class="text-sm text-gray-600 line-clamp-1">{{ traineeLectureDetail.lecture.tittle }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-sm font-medium text-gray-600">{{ getCurrentPageIndex() + 1 }} / {{ traineeLectureDetail.lecture.lecturePages.length }}</span>
+            <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-primary-500 to-accent-500 transition-all duration-300" 
+                   [style.width.%]="((getCurrentPageIndex() + 1) / traineeLectureDetail.lecture.lecturePages.length) * 100">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Main Content with Tailwind -->
+        <div class="flex-1 flex flex-col bg-gray-50">
+          
+          <!-- Content Header -->
+          <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center justify-center w-12 h-12 rounded-lg" 
+                   [style.background-color]="getTypeColor(currentViewingPage.typeLecturePage) + '20'">
+                <mat-icon class="text-2xl" [style.color]="getTypeColor(currentViewingPage.typeLecturePage)">
+                  {{ getLecturePageTypeIcon(currentViewingPage.typeLecturePage) }}
+                </mat-icon>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800 line-clamp-1">{{ currentViewingPage.tittle }}</h3>
+                <div class="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                  <span>{{ getLecturePageTypeDisplayText(currentViewingPage.typeLecturePage) }}</span>
+                  <span class="text-gray-400">•</span>
+                  <span>Trang {{ currentViewingPage.pageNumber }}</span>
+                  <mat-chip [color]="getCurrentPageStatusColor()" selected class="ml-2 text-xs">
+                    {{ getCurrentPageStatusText() }}
+                  </mat-chip>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <button mat-icon-button 
+                      (click)="previousViewingPage()"
+                      [disabled]="!canGoPreviousPage()"
+                      matTooltip="Trang trước"
+                      class="text-gray-600 hover:text-gray-800 disabled:text-gray-300">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              
+              <button mat-icon-button 
+                      (click)="nextViewingPage()"
+                      [disabled]="!canGoNextPage()"
+                      matTooltip="Trang tiếp theo"
+                      class="text-gray-600 hover:text-gray-800 disabled:text-gray-300">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+              
+              <div class="w-px h-6 bg-gray-300 mx-2"></div>
+              
+              <button mat-stroked-button 
+                      (click)="openInNewTab(currentViewingPage.storageURL)"
+                      [disabled]="!currentViewingPage.storageURL"
+                      matTooltip="Mở trong tab mới"
+                      class="text-sm">
+                <mat-icon class="text-base mr-1">open_in_new</mat-icon>
+                Tab mới
+              </button>
+              
+              <button mat-raised-button 
+                      color="accent"
+                      *ngIf="!isCurrentPageCompleted()"
+                      (click)="markPageCompleted()"
+                      class="text-sm">
+                <mat-icon class="text-base mr-1">check</mat-icon>
+                Hoàn thành
+              </button>
+            </div>
+          </div>
+          
+          <!-- Content Display -->
+          <div class="flex-1 bg-white m-4 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Error State -->
+            <div *ngIf="viewerError" class="flex flex-col items-center justify-center h-full p-8 text-center">
+              <mat-icon class="text-6xl text-red-500 mb-4">error</mat-icon>
+              <p class="text-lg text-gray-700 mb-6">{{ viewerError }}</p>
+              <button mat-raised-button color="primary" (click)="openInNewTab(currentViewingPage.storageURL)" class="px-6 py-2">
+                <mat-icon class="mr-2">open_in_new</mat-icon>
+                Mở trong tab mới
+              </button>
+            </div>
+            
+            <!-- Loading State -->
+            <div *ngIf="!viewerError && !safeContentUrl && !imageUrl" class="flex flex-col items-center justify-center h-full p-8">
+              <mat-spinner diameter="60" class="mb-4"></mat-spinner>
+              <p class="text-lg text-gray-600">Đang tải nội dung...</p>
+            </div>
+            
+            <!-- Content Display -->
+            <div *ngIf="!viewerError && (safeContentUrl || imageUrl)" class="h-full">
+              <!-- Image Content -->
+              <div *ngIf="currentViewingPage.typeLecturePage === 1" class="h-full flex items-center justify-center bg-gray-100">
+                <img *ngIf="imageUrl"
+                     [src]="imageUrl" 
+                     [alt]="currentViewingPage.tittle"
+                     (error)="onImageError()"
+                     class="max-w-full max-h-full object-contain rounded-lg shadow-lg">
+                
+                <iframe *ngIf="!imageUrl && safeContentUrl"
+                        [src]="safeContentUrl"
+                        class="w-full h-full border-0 rounded-lg">
+                </iframe>
+              </div>
+              
+              <!-- Video/Document/Other Content -->
+              <div *ngIf="currentViewingPage.typeLecturePage !== 1" class="h-full">
+                <iframe [src]="safeContentUrl"
+                        class="w-full h-full border-0"
+                        allowfullscreen>
+                </iframe>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Content Footer -->
+          <div *ngIf="currentViewingPage.description" class="bg-white border-t border-gray-200 p-6">
+            <div class="max-w-4xl mx-auto">
+              <h4 class="flex items-center gap-2 text-lg font-semibold text-gray-800 mb-3">
+                <mat-icon class="text-gray-600">description</mat-icon>
+                Mô tả nội dung
+              </h4>
+              <p class="text-gray-700 leading-relaxed">{{ currentViewingPage.description }}</p>
+            </div>
+        </div>
+      </div>
+    
     </div>
   </div>
 </div>

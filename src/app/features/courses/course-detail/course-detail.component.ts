@@ -16,83 +16,12 @@ import { Subject, takeUntil } from 'rxjs';
 
 // Import services và interfaces
 import { CourseService, Course, CourseLevel, CourseStatus, CourseSyllabus } from '../services/course.service';
-import { AuthService } from '../../../services/auth.service';
+import { LectureDetailService } from '../services/lecture-detail.service';
+import { LectureDetail, LecturePage, TraineeLectureDetail, LecturePageTrainee, StatusLearn, getLecturePageTypeDisplayText, getLecturePageTypeIcon, getStatusLearnDisplayText, getStatusLearnColor } from '../../../core/models/lecture-detail';
+import { AuthenticationService } from '../../../core/guards/authentication.service';
 import { LoginDialogComponent } from '../../../components/login-dialog/login-dialog.component';
 import { CourseEnrollmentComponent } from '../course-enrollment/course-enrollment.component';
 
-// Mock syllabus data for demonstration
-const MOCK_SYLLABUS: CourseSyllabus[] = [
-  {
-    id: 1,
-    title: 'Giới thiệu khóa học',
-    description: 'Tổng quan về nội dung và mục tiêu khóa học',
-    duration: 30,
-    order: 1,
-    lessons: [
-      {
-        id: 1,
-        title: 'Chào mừng đến với khóa học',
-        description: 'Video giới thiệu về khóa học và giảng viên',
-        duration: 10,
-        type: 'video',
-        order: 1,
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-      },
-      {
-        id: 2,
-        title: 'Mục tiêu học tập',
-        description: 'Những gì bạn sẽ học được sau khóa học',
-        duration: 15,
-        type: 'document',
-        order: 2,
-        documentUrl: 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf'
-      },
-      {
-        id: 3,
-        title: 'Kiểm tra kiến thức đầu vào',
-        description: 'Bài kiểm tra đánh giá kiến thức hiện tại',
-        duration: 5,
-        type: 'quiz',
-        order: 3
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: 'Nội dung chính',
-    description: 'Các bài học cốt lõi của khóa học',
-    duration: 120,
-    order: 2,
-    lessons: [
-      {
-        id: 4,
-        title: 'Bài 1: Khái niệm cơ bản',
-        description: 'Tìm hiểu các khái niệm cơ bản trong lĩnh vực',
-        duration: 30,
-        type: 'video',
-        order: 1,
-        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-      },
-      {
-        id: 5,
-        title: 'Bài 2: Thực hành cơ bản',
-        description: 'Bài tập thực hành để củng cố kiến thức',
-        duration: 45,
-        type: 'assignment',
-        order: 2
-      },
-      {
-        id: 6,
-        title: 'Tài liệu tham khảo',
-        description: 'Tài liệu bổ sung cho bài học',
-        duration: 15,
-        type: 'document',
-        order: 3,
-        documentUrl: 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf'
-      }
-    ]
-  }
-];
 
 @Component({
   selector: 'app-course-detail',
@@ -116,6 +45,8 @@ const MOCK_SYLLABUS: CourseSyllabus[] = [
 export class CourseDetailComponent implements OnInit, OnDestroy {
   // Course data
   course: Course | null = null;
+  traineeLectureDetail: TraineeLectureDetail | null = null;
+  lectureId: string = '';
   courseId: number = 0;
   
   // Loading states
@@ -136,34 +67,60 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   userProgress = 0;
   completedLessons: number[] = [];
   
+  // Learning flow state
+  currentPageIndex = 0;
+  isLearningStarted = false;
+  currentLearningPageId: string | null = null;
+  completedPageIds: string[] = [];
+  
+  // Lecture page viewer state
+  showLectureViewer = false;
+  currentViewingPage: LecturePage | null = null;
+  currentViewingPageIndex = 0;
+  safeContentUrl: SafeResourceUrl | null = null;
+  imageUrl: string = '';
+  viewerError: string = '';
+  
   // Subject để unsubscribe
   private destroy$ = new Subject<void>();
+
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private courseService: CourseService,
-    private authService: AuthService,
+    private lectureDetailService: LectureDetailService,
+    private authenticationService: AuthenticationService,
     private sanitizer: DomSanitizer,
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
-    // Get course ID from route
+    // Get lectureId from route params
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      this.courseId = +params['id'];
-      if (this.courseId) {
-        this.loadCourse();
+      this.lectureId = params['id'];
+      if (this.lectureId) {
+        this.loadLectureDetail();
       }
     });
 
-    // Check authentication status
-    this.authService.isLoggedIn$.pipe(takeUntil(this.destroy$)).subscribe(isLoggedIn => {
-      this.isLoggedIn = isLoggedIn;
+    // Check for query params to determine if coming from start learning
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(queryParams => {
+      if (queryParams['autoStart'] === 'true') {
+        // User came from "start learning" button, auto start the first page
+        setTimeout(() => {
+          if (this.traineeLectureDetail?.lecture?.lecturePages && this.traineeLectureDetail.lecture.lecturePages.length > 0) {
+            this.startLearning();
+          }
+        }, 1000);
+      }
+      // If no autoStart param, just load normally for continue learning
     });
 
-    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
+    // Check authentication status
+    this.authenticationService.user.pipe(takeUntil(this.destroy$)).subscribe(user => {
+      this.isLoggedIn = this.authenticationService.isAuthenticated();
       this.currentUser = user;
     });
   }
@@ -174,24 +131,25 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load course details
+   * Load lecture details
    */
-  private loadCourse(): void {
+  private loadLectureDetail(): void {
+    if (!this.authenticationService.isAuthenticated()) {
+      // this.showErrorMessage('Vui lòng đăng nhập để xem chi tiết khóa học');
+      return;
+    }
+
     this.loading = true;
     
-    this.courseService.getCourseById(this.courseId)
+    this.lectureDetailService.getLectureDetail(this.lectureId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (course) => {
-          if (course) {
-            this.course = { ...course, syllabus: MOCK_SYLLABUS };
-            this.loadUserProgress();
-          } else {
-            this.showErrorMessage('Không tìm thấy khóa học');
-            this.router.navigate(['/courses']);
-          }
-          this.loading = false;
-        },
+      next: (traineeLectureDetail) => {
+        this.traineeLectureDetail = traineeLectureDetail;
+        this.loadUserProgress();
+        this.detectLearningProgress();
+        this.loading = false;
+      },
         error: (error) => {
           console.error('Lỗi khi tải chi tiết khóa học:', error);
           this.showErrorMessage('Không thể tải thông tin khóa học');
@@ -216,7 +174,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    * Check if user can access course content
    */
   canAccessContent(): boolean {
-    return this.isLoggedIn && this.course?.status === CourseStatus.PUBLISHED;
+    return this.isLoggedIn;
   }
 
   /**
@@ -447,6 +405,724 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  /**
+   * View lecture page
+   */
+  viewLecturePage(page: LecturePage): void {
+    if (!this.traineeLectureDetail) return;
+    
+    this.currentViewingPage = page;
+    this.currentViewingPageIndex = this.traineeLectureDetail.lecture.lecturePages.findIndex(p => p.id === page.id);
+    this.showLectureViewer = true;
+    this.loadPageContent(page);
+    
+    // Tìm lecturePageTraineeId tương ứng với page này
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === page.id);
+    if (pageTrainee) {
+      // Gọi startPage API
+      this.lectureDetailService.startPage(pageTrainee.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            console.log('Started page successfully:', response);
+            // Cập nhật trạng thái trong local data nếu cần
+            pageTrainee.statusLearn = 1; // InProgressLearn
+            pageTrainee.timetStartLearn = new Date().toISOString();
+          },
+          error: (error) => {
+            console.error('Error starting page:', error);
+            this.showErrorMessage('Không thể bắt đầu trang học');
+          }
+        });
+    }
+  }
+  
+  /**
+   * Close lecture viewer
+   */
+  closeLectureViewer(): void {
+    this.showLectureViewer = false;
+    this.currentViewingPage = null;
+    this.safeContentUrl = null;
+    this.imageUrl = '';
+    this.viewerError = '';
+  }
+  
+  /**
+   * Previous viewing page
+   */
+  previousViewingPage(): void {
+    if (!this.canGoPreviousPage()) return;
+    
+    this.currentViewingPageIndex--;
+    this.currentViewingPage = this.traineeLectureDetail!.lecture.lecturePages[this.currentViewingPageIndex];
+    this.loadPageContent(this.currentViewingPage);
+  }
+  
+  /**
+   * Next viewing page
+   */
+  nextViewingPage(): void {
+    if (!this.canGoNextPage()) return;
+    
+    this.currentViewingPageIndex++;
+    this.currentViewingPage = this.traineeLectureDetail!.lecture.lecturePages[this.currentViewingPageIndex];
+    this.loadPageContent(this.currentViewingPage);
+  }
+  
+  /**
+   * Go to specific page
+   */
+  goToPage(pageIndex: number): void {
+    if (!this.traineeLectureDetail || 
+        pageIndex < 0 || 
+        pageIndex >= this.traineeLectureDetail.lecture.lecturePages.length) {
+      return;
+    }
+    
+    this.currentViewingPageIndex = pageIndex;
+    this.currentViewingPage = this.traineeLectureDetail.lecture.lecturePages[pageIndex];
+    this.loadPageContent(this.currentViewingPage);
+  }
+  
+  /**
+   * Check if can go to previous page
+   */
+  canGoPreviousPage(): boolean {
+    return this.currentViewingPageIndex > 0;
+  }
+  
+  /**
+   * Check if can go to next page
+   */
+  canGoNextPage(): boolean {
+    if (!this.traineeLectureDetail) return false;
+    return this.currentViewingPageIndex < this.traineeLectureDetail.lecture.lecturePages.length - 1;
+  }
+  
+  /**
+   * Get current page index
+   */
+  getCurrentPageIndex(): number {
+    return this.currentViewingPageIndex;
+  }
+  
+  /**
+   * Kiểm tra tất cả trang học đã hoàn thành chưa
+   */
+  areAllPagesCompleted(): boolean {
+    if (!this.traineeLectureDetail?.lecturePageTrainees || this.traineeLectureDetail.lecturePageTrainees.length === 0) {
+      return false;
+    }
+    
+    return this.traineeLectureDetail.lecturePageTrainees.every(pageTrainee => 
+      pageTrainee.statusLearn === 2 // CompletedLearn
+    );
+  }
+  
+  /**
+   * Đếm số trang đã hoàn thành
+   */
+  getCompletedPagesCount(): number {
+    if (!this.traineeLectureDetail?.lecturePageTrainees) return 0;
+    
+    return this.traineeLectureDetail.lecturePageTrainees.filter(pageTrainee => 
+      pageTrainee.statusLearn === 2 // CompletedLearn
+    ).length;
+  }
+  
+  /**
+   * Lấy tổng số trang học
+   */
+  getTotalPagesCount(): number {
+    return this.traineeLectureDetail?.lecturePageTrainees?.length || 0;
+  }
+  
+  /**
+   * Tính phần trăm hoàn thành
+   */
+  getCompletionPercentage(): number {
+    const total = this.getTotalPagesCount();
+    if (total === 0) return 0;
+    
+    const completed = this.getCompletedPagesCount();
+    return Math.round((completed / total) * 100);
+  }
+  
+  /**
+   * Lấy trạng thái hiển thị của một trang học
+   */
+  getPageStatus(page: LecturePage): string {
+    if (!this.traineeLectureDetail?.lecturePageTrainees) return 'Chưa bắt đầu';
+    
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === page.id);
+    if (!pageTrainee) return 'Chưa bắt đầu';
+    
+    return getStatusLearnDisplayText(pageTrainee.statusLearn);
+  }
+  
+  /**
+   * Lấy màu sắc hiển thị của một trang học
+   */
+  getPageStatusColor(page: LecturePage): string {
+    if (!this.traineeLectureDetail?.lecturePageTrainees) return 'basic';
+    
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === page.id);
+    if (!pageTrainee) return 'basic';
+    
+    return getStatusLearnColor(pageTrainee.statusLearn);
+  }
+  
+  /**
+   * Kiểm tra trang có được hoàn thành chưa
+   */
+  isPageCompleted(page: LecturePage): boolean {
+    if (!this.traineeLectureDetail?.lecturePageTrainees) return false;
+    
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === page.id);
+    return pageTrainee?.statusLearn === 2; // CompletedLearn
+  }
+  
+  /**
+   * Kiểm tra trang có đang học chưa
+   */
+  isPageInProgress(page: LecturePage): boolean {
+    if (!this.traineeLectureDetail?.lecturePageTrainees) return false;
+    
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === page.id);
+    return pageTrainee?.statusLearn === 1; // InProgressLearn
+  }
+  
+  /**
+   * Lấy trạng thái tổng thể của khóa học
+   */
+  getCourseStatus(): string {
+    if (!this.traineeLectureDetail) return 'Chưa bắt đầu';
+    return getStatusLearnDisplayText(this.traineeLectureDetail.statusLearn);
+  }
+  
+  /**
+   * Lấy màu sắc trạng thái tổng thể của khóa học
+   */
+  getCourseStatusColor(): string {
+    if (!this.traineeLectureDetail) return 'basic';
+    return getStatusLearnColor(this.traineeLectureDetail.statusLearn);
+  }
+  
+  /**
+   * Kiểm tra khóa học đã hoàn thành chưa
+   */
+  isCourseCompleted(): boolean {
+    return this.traineeLectureDetail?.statusLearn === 2 || this.traineeLectureDetail?.statusLearn === 4;
+  }
+  
+  /**
+   * Hoàn thành khóa học
+   */
+  finishCourse(): void {
+    if (!this.traineeLectureDetail) {
+      this.showErrorMessage('Không tìm thấy thông tin khóa học');
+      return;
+    }
+    
+    // Kiểm tra nếu tất cả trang đã hoàn thành
+    if (!this.areAllPagesCompleted()) {
+      this.showErrorMessage('Bạn cần hoàn thành tất cả các trang học trước khi hoàn thành khóa học');
+      return;
+    }
+    
+    // Kiểm tra nếu khóa học chưa hoàn thành
+    if (this.traineeLectureDetail.statusLearn === 2 || this.traineeLectureDetail.statusLearn === 4) {
+      this.showSuccessMessage('Khóa học này đã được hoàn thành!');
+      return;
+    }
+    
+    // Gọi finishLearning API
+    this.lectureDetailService.finishLearning(this.traineeLectureDetail.lectureId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          console.log('Finished course successfully:', response);
+          
+          // Cập nhật trạng thái local
+          this.traineeLectureDetail!.statusLearn = 2; // CompletedLearn
+          this.traineeLectureDetail!.timeCompletedLearn = new Date().toISOString();
+          
+          this.showSuccessMessage('Chúc mừng! Bạn đã hoàn thành khóa học!');
+          
+          // Tùy chọn: Điều hướng về trang danh sách khóa học hoặc tải lại
+          setTimeout(() => {
+            this.loadLectureDetail(); // Tải lại để cập nhật trạng thái mới nhất
+          }, 2000);
+        },
+        error: (error) => {
+          console.error('Error finishing course:', error);
+          this.showErrorMessage('Không thể hoàn thành khóa học. Vui lòng thử lại sau.');
+        }
+      });
+  }
+  
+  /**
+   * Mark current page as completed
+   */
+  markPageCompleted(): void {
+    if (!this.currentViewingPage || !this.traineeLectureDetail) return;
+    
+    // Tìm pageTrainee tương ứng
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees.find(pt => pt.lecturePageId === this.currentViewingPage!.id);
+    if (!pageTrainee) {
+      this.showErrorMessage('Không tìm thấy thông tin trang học');
+      return;
+    }
+    
+    // Kiểm tra nếu trang chưa hoàn thành
+    if (pageTrainee.statusLearn !== 2) { // Chưa CompletedLearn
+      // Gọi finishPage API
+      this.lectureDetailService.finishPage(pageTrainee.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            console.log('Finished page successfully:', response);
+            
+            // Cập nhật trạng thái local
+            pageTrainee.statusLearn = 2; // CompletedLearn
+            pageTrainee.timeCompletedLearn = new Date().toISOString();
+            
+            // Thêm vào danh sách hoàn thành (compatibility với code cũ)
+            if (!this.completedPageIds.includes(this.currentViewingPage!.id)) {
+              this.completedPageIds.push(this.currentViewingPage!.id);
+            }
+            
+            this.showSuccessMessage('Đã đánh dấu trang hoàn thành!');
+            
+            // Auto move to next page if available
+            if (this.canGoNextPage()) {
+              setTimeout(() => {
+                this.nextViewingPage();
+              }, 1000);
+            } else {
+              // Kiểm tra nếu tất cả trang đã hoàn thành
+              if (this.areAllPagesCompleted()) {
+                this.showSuccessMessage('Chúc mừng! Bạn đã hoàn thành tất cả tài liệu!');
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error finishing page:', error);
+            this.showErrorMessage('Không thể hoàn thành trang học');
+          }
+        });
+    } else {
+      this.showSuccessMessage('Trang này đã được hoàn thành trước đó!');
+    }
+  }
+  
+  /**
+   * Load page content for viewer
+   */
+  private loadPageContent(page: LecturePage): void {
+    this.resetViewerContent();
+    
+    if (!page.storageURL) {
+      this.viewerError = 'URL không tồn tại';
+      return;
+    }
+    
+    const url = page.storageURL.trim();
+    
+    if (!this.isValidUrlFormat(url)) {
+      this.viewerError = 'URL không hợp lệ';
+      return;
+    }
+    
+    this.processUrlByType(page, url);
+  }
+  
+  /**
+   * Reset viewer content
+   */
+  private resetViewerContent(): void {
+    this.safeContentUrl = null;
+    this.imageUrl = '';
+    this.viewerError = '';
+  }
+  
+  /**
+   * Process URL by page type
+   */
+  private processUrlByType(page: LecturePage, url: string): void {
+    try {
+      switch (page.typeLecturePage) {
+        case 1: // Image
+          this.processImageUrl(url);
+          break;
+        case 2: // Video
+          this.processVideoUrl(url);
+          break;
+        case 4: // Doc
+        case 5: // PDF
+          this.processDocumentUrl(url);
+          break;
+        case 6: // Slide
+          this.processSlideUrl(url);
+          break;
+        case 3: // Text
+        case 0: // Other
+        default:
+          this.processGenericUrl(url);
+          break;
+      }
+    } catch (error) {
+      this.viewerError = 'Lỗi khi xử lý URL: ' + error;
+    }
+  }
+  
+  /**
+   * Process image URL
+   */
+  private processImageUrl(url: string): void {
+    if (url.includes('drive.google.com')) {
+      const processedUrl = this.processGoogleDriveUrl(url, 'image');
+      this.imageUrl = processedUrl;
+    } else {
+      this.imageUrl = url;
+    }
+  }
+  
+  /**
+   * Process video URL
+   */
+  private processVideoUrl(url: string): void {
+    if (url.includes('drive.google.com')) {
+      const driveUrl = this.processGoogleDriveUrl(url, 'video');
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(driveUrl);
+    } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const videoId = this.extractYouTubeId(url);
+      if (videoId) {
+        this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+          `https://www.youtube.com/embed/${videoId}`
+        );
+      } else {
+        this.viewerError = 'Không thể trích xuất YouTube video ID';
+      }
+    } else if (url.includes('vimeo.com')) {
+      const videoId = this.extractVimeoId(url);
+      if (videoId) {
+        this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+          `https://player.vimeo.com/video/${videoId}`
+        );
+      } else {
+        this.viewerError = 'Không thể trích xuất Vimeo video ID';
+      }
+    } else {
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    }
+  }
+  
+  /**
+   * Process document URL
+   */
+  private processDocumentUrl(url: string): void {
+    if (url.includes('drive.google.com')) {
+      const driveUrl = this.processGoogleDriveUrl(url, 'document');
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(driveUrl);
+    } else {
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+      );
+    }
+  }
+  
+  /**
+   * Process slide URL
+   */
+  private processSlideUrl(url: string): void {
+    if (url.includes('drive.google.com')) {
+      const driveUrl = this.processGoogleDriveUrl(url, 'slide');
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(driveUrl);
+    } else if (url.includes('docs.google.com/presentation')) {
+      const embedUrl = url.includes('/embed') ? url : url.replace('/edit', '/embed');
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+    } else {
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
+      );
+    }
+  }
+  
+  /**
+   * Process generic URL
+   */
+  private processGenericUrl(url: string): void {
+    if (url.includes('drive.google.com')) {
+      const driveUrl = this.processGoogleDriveUrl(url, 'document');
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(driveUrl);
+    } else {
+      this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    }
+  }
+  
+  /**
+   * Extract YouTube ID
+   */
+  private extractYouTubeId(url: string): string | null {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  }
+  
+  /**
+   * Extract Vimeo ID
+   */
+  private extractVimeoId(url: string): string | null {
+    const regExp = /vimeo.com\/(\d+)/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+  }
+  
+  /**
+   * Process Google Drive URLs
+   */
+  private processGoogleDriveUrl(url: string, fileType: 'image' | 'video' | 'document' | 'slide' = 'document'): string {
+    const fileId = this.extractGoogleDriveFileId(url);
+    
+    if (fileId) {
+      switch (fileType) {
+        case 'image':
+          return `https://drive.google.com/uc?id=${fileId}`;
+        case 'video':
+          return `https://drive.google.com/file/d/${fileId}/preview`;
+        case 'slide':
+          if (url.includes('docs.google.com/presentation')) {
+            return `https://docs.google.com/presentation/d/${fileId}/embed?start=false&loop=false&delayms=3000`;
+          } else {
+            return `https://drive.google.com/file/d/${fileId}/preview`;
+          }
+        case 'document':
+        default:
+          return `https://drive.google.com/file/d/${fileId}/preview`;
+      }
+    }
+    
+    return url;
+  }
+  
+  /**
+   * Extract Google Drive file ID
+   */
+  private extractGoogleDriveFileId(url: string): string | null {
+    let fileId = '';
+    
+    if (url.includes('/file/d/')) {
+      fileId = url.split('/file/d/')[1]?.split('/')[0];
+    } else if (url.includes('id=')) {
+      fileId = url.split('id=')[1]?.split('&')[0];
+    } else if (url.includes('/open?id=')) {
+      fileId = url.split('/open?id=')[1]?.split('&')[0];
+    } else if (url.includes('drive.google.com/') && url.includes('?id=')) {
+      fileId = url.split('?id=')[1]?.split('&')[0];
+    }
+    
+    return fileId || null;
+  }
+  
+  /**
+   * Check if URL format is valid
+   */
+  private isValidUrlFormat(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  
+  /**
+   * Handle image error
+   */
+  onImageError(): void {
+    if (this.imageUrl.includes('drive.google.com')) {
+      const fileId = this.extractGoogleDriveFileId(this.imageUrl);
+      if (fileId) {
+        this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+          `https://drive.google.com/file/d/${fileId}/preview`
+        );
+        this.imageUrl = '';
+        return;
+      }
+    }
+    
+    this.viewerError = 'Không thể tải hình ảnh. Vui lòng kiểm tra quyền truy cập hoặc thử mở trong tab mới.';
+  }
+  
+  /**
+   * Open URL in new tab
+   */
+  openInNewTab(url: string): void {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
+  
+  /**
+   * Get current page status text
+   */
+  getCurrentPageStatusText(): string {
+    if (!this.currentViewingPage || !this.traineeLectureDetail) {
+      return 'Chưa bắt đầu';
+    }
+    
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees?.find(
+      pt => pt.lecturePageId === this.currentViewingPage!.id
+    );
+    
+    return pageTrainee ? getStatusLearnDisplayText(pageTrainee.statusLearn) : 'Chưa bắt đầu';
+  }
+  
+  /**
+   * Get current page status color
+   */
+  getCurrentPageStatusColor(): string {
+    if (!this.currentViewingPage || !this.traineeLectureDetail) {
+      return 'basic';
+    }
+    
+    const pageTrainee = this.traineeLectureDetail.lecturePageTrainees?.find(
+      pt => pt.lecturePageId === this.currentViewingPage!.id
+    );
+    
+    return pageTrainee ? getStatusLearnColor(pageTrainee.statusLearn) : 'basic';
+  }
+  
+  /**
+   * Get type color for page
+   */
+  getTypeColor(type: number): string {
+    switch (type) {
+      case 2: // Video
+        return '#f44336'; // Red
+      case 1: // Image
+        return '#4caf50'; // Green
+      case 4: // Doc
+      case 5: // Pdf
+        return '#2196f3'; // Blue
+      case 6: // Slide
+        return '#ff9800'; // Orange
+      case 3: // Text
+        return '#9c27b0'; // Purple
+      default:
+        return '#607d8b'; // Blue Grey
+    }
+  }
+
+  /**
+   * Get sorted pages
+   */
+  getSortedPages(): LecturePage[] {
+    if (!this.traineeLectureDetail?.lecture?.lecturePages) {
+      return [];
+    }
+    
+    return this.traineeLectureDetail.lecture.lecturePages.sort((a, b) => a.pageNumber - b.pageNumber);
+  }
+  
+  /**
+   * Track by page ID for ngFor
+   */
+  trackByPageId(index: number, page: LecturePage): string {
+    return page.id;
+  }
+  
+  /**
+   * Check if current viewing page is completed
+   */
+  isCurrentPageCompleted(): boolean {
+    if (!this.currentViewingPage) {
+      return false;
+    }
+    return this.completedPageIds.includes(this.currentViewingPage.id);
+  }
+  
+  /**
+   * Can start learning
+   */
+  canStartLearning(): boolean {
+    if (!this.traineeLectureDetail) return false;
+    return this.traineeLectureDetail.statusLearn === 0 || this.traineeLectureDetail.statusLearn === 1;
+  }
+  
+  /**
+   * Start learning
+   */
+  startLearning(): void {
+    this.isLearningStarted = true;
+    if (this.traineeLectureDetail?.lecture?.lecturePages && this.traineeLectureDetail.lecture.lecturePages.length > 0) {
+      this.currentLearningPageId = this.traineeLectureDetail.lecture.lecturePages[0].id;
+    }
+  }
+  
+  /**
+   * Finish current page
+   */
+  finishCurrentPage(): void {
+    if (this.currentLearningPageId && !this.completedPageIds.includes(this.currentLearningPageId)) {
+      this.completedPageIds.push(this.currentLearningPageId);
+      this.showSuccessMessage('Đã hoàn thành trang!');
+      
+      // Move to next page
+      if (this.traineeLectureDetail?.lecture?.lecturePages) {
+        const currentIndex = this.traineeLectureDetail.lecture.lecturePages.findIndex(p => p.id === this.currentLearningPageId);
+        if (currentIndex >= 0 && currentIndex < this.traineeLectureDetail.lecture.lecturePages.length - 1) {
+          this.currentLearningPageId = this.traineeLectureDetail.lecture.lecturePages[currentIndex + 1].id;
+        } else {
+          this.currentLearningPageId = null;
+          this.showSuccessMessage('Chúc mừng! Bạn đã hoàn thành tất cả tài liệu!');
+        }
+      }
+    }
+  }
+  
+  /**
+   * Get current page info
+   */
+  getCurrentPageInfo(): { current: number, total: number, page?: LecturePage } {
+    if (!this.traineeLectureDetail?.lecture?.lecturePages) {
+      return { current: 0, total: 0 };
+    }
+    
+    const pages = this.traineeLectureDetail.lecture.lecturePages;
+    const currentIndex = pages.findIndex(p => p.id === this.currentLearningPageId);
+    
+    return {
+      current: currentIndex >= 0 ? currentIndex + 1 : this.completedPageIds.length,
+      total: pages.length,
+      page: currentIndex >= 0 ? pages[currentIndex] : undefined
+    };
+  }
+  
+  /**
+   * Get learning progress
+   */
+  getLearningProgress(): number {
+    if (!this.traineeLectureDetail?.lecture?.lecturePages) {
+      return 0;
+    }
+    
+    const total = this.traineeLectureDetail.lecture.lecturePages.length;
+    const completed = this.completedPageIds.length;
+    
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  }
+  
+  /**
+   * Get overall progress
+   */
+  getOverallProgress(): number {
+    return this.getCompletionPercentage();
+  }
+
   /**
    * Show success message
    */
@@ -456,4 +1132,95 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
       panelClass: ['success-snackbar']
     });
   }
+
+
+  /**
+   * Open lecture page content (legacy method - redirects to viewLecturePage)
+   */
+  openLecturePage(page: LecturePage): void {
+    // Redirect to the new viewer method
+    this.viewLecturePage(page);
+  }
+
+  /**
+   * Get status icon for different learning statuses
+   */
+  getStatusIcon(statusLearn?: number): string {
+    if (statusLearn === undefined || statusLearn === null) {
+      return 'help_outline';
+    }
+    switch (statusLearn) {
+      case 0: return 'radio_button_unchecked'; // Not started
+      case 1: return 'play_circle'; // In progress
+      case 2: return 'check_circle'; // Completed learning
+      case 3: return 'quiz'; // In exam
+      case 4: return 'school'; // Completed course
+      default: return 'help_outline';
+    }
+  }
+
+  /**
+   * Get status description for different learning statuses
+   */
+  getStatusDescription(statusLearn?: number): string {
+    if (statusLearn === undefined || statusLearn === null) {
+      return 'Trạng thái không xác định.';
+    }
+    switch (statusLearn) {
+      case 0: return 'Bạn chưa bắt đầu học khóa học này. Hãy nhấn "Bắt đầu học" để bắt đầu.';
+      case 1: return 'Bạn đang trong quá trình học tập. Tiếp tục hoàn thành các tài liệu còn lại.';
+      case 2: return 'Tuyệt vời! Bạn đã hoàn thành phần học tập. Có thể bắt đầu làm bài thi.';
+      case 3: return 'Bạn đang trong quá trình làm bài thi. Chúc bạn may mắn!';
+      case 4: return 'Chúc mừng! Bạn đã hoàn thành toàn bộ khóa học một cách xuất sắc.';
+      default: return 'Trạng thái không xác định.';
+    }
+  }
+
+  /**
+   * Get formatted duration from houres
+   */
+  getFormattedCourseDuration(): string {
+    if (!this.traineeLectureDetail?.lecture?.courses?.houres) return '';
+    return this.formatDuration(this.traineeLectureDetail.lecture.courses.houres * 60);
+  }
+
+
+  
+  /**
+   * Helper methods cho template
+   */
+  getLecturePageTypeDisplayText = getLecturePageTypeDisplayText;
+  getLecturePageTypeIcon = getLecturePageTypeIcon;
+  getStatusLearnDisplayText = getStatusLearnDisplayText;
+  getStatusLearnColor = getStatusLearnColor;
+
+  /**
+   * Detect learning progress from existing data
+   */
+  private detectLearningProgress(): void {
+    if (!this.traineeLectureDetail) {
+      return;
+    }
+
+    // Check if learning is in progress
+    if (this.traineeLectureDetail.statusLearn === 1) { // InProgressLearn
+      this.isLearningStarted = true;
+      
+      // If lecturePageTrainees data is available, use it to determine progress
+      if (this.traineeLectureDetail.lecturePageTrainees && Array.isArray(this.traineeLectureDetail.lecturePageTrainees)) {
+        // Find completed pages and current page from API data
+        this.traineeLectureDetail.lecturePageTrainees.forEach((pageTrainee: LecturePageTrainee) => {
+          if (pageTrainee.statusLearn === 2) { // Completed
+            this.completedPageIds.push(pageTrainee.lecturePageId);
+          } else if (pageTrainee.statusLearn === 1) { // In Progress
+            this.currentLearningPageId = pageTrainee.lecturePageId;
+          }
+        });
+
+        // Set current page index based on completed pages
+        this.currentPageIndex = this.completedPageIds.length;
+      }
+    }
+  }
 }
+
