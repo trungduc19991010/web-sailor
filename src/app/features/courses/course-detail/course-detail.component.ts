@@ -407,6 +407,26 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
 
 
   /**
+   * Get icon for status
+   */
+  getStatusIcon(statusLearn: number): string {
+    switch (statusLearn) {
+      case 0: // NotStartedLearn
+        return 'radio_button_unchecked';
+      case 1: // InProgressLearn
+        return 'play_circle';
+      case 2: // CompletedLearn
+        return 'check_circle';
+      case 3: // FailedLearn
+        return 'error';
+      case 4: // CertifiedLearn
+        return 'verified';
+      default:
+        return 'help_outline';
+    }
+  }
+
+  /**
    * View lecture page
    */
   viewLecturePage(page: LecturePage): void {
@@ -1117,10 +1137,34 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Get overall progress
+   * Get overall progress percentage
    */
   getOverallProgress(): number {
     return this.getCompletionPercentage();
+  }
+
+  /**
+   * Get status badge CSS classes based on learning status
+   */
+  getStatusBadgeClasses(): string {
+    if (!this.traineeLectureDetail) {
+      return 'from-gray-500 to-gray-600 border-gray-400';
+    }
+    
+    switch (this.traineeLectureDetail.statusLearn) {
+      case 0: // NotStartedLearn
+        return 'from-gray-500 to-slate-600 border-gray-400';
+      case 1: // InProgressLearn
+        return 'from-blue-500 to-indigo-600 border-blue-400';
+      case 2: // CompletedLearn
+        return 'from-green-500 to-emerald-600 border-green-400';
+      case 3: // FailedLearn
+        return 'from-red-500 to-rose-600 border-red-400';
+      case 4: // CertifiedLearn
+        return 'from-purple-500 to-violet-600 border-purple-400';
+      default:
+        return 'from-gray-500 to-gray-600 border-gray-400';
+    }
   }
 
   /**
@@ -1142,22 +1186,6 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     this.viewLecturePage(page);
   }
 
-  /**
-   * Get status icon for different learning statuses
-   */
-  getStatusIcon(statusLearn?: number): string {
-    if (statusLearn === undefined || statusLearn === null) {
-      return 'help_outline';
-    }
-    switch (statusLearn) {
-      case 0: return 'radio_button_unchecked'; // Not started
-      case 1: return 'play_circle'; // In progress
-      case 2: return 'check_circle'; // Completed learning
-      case 3: return 'quiz'; // In exam
-      case 4: return 'school'; // Completed course
-      default: return 'help_outline';
-    }
-  }
 
   /**
    * Get status description for different learning statuses

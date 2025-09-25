@@ -19,73 +19,156 @@
       </div>
 
       <!-- Course header -->
-      <div class="course-header">
-        <div class="course-header-content">
-          <div class="course-image">
-            <img src="assets/images/default-course.jpg" 
-                 [alt]="traineeLectureDetail.lecture.courses.name"
-                 onerror="this.src='assets/images/default-course.jpg'">
+      <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-2xl shadow-lg border border-gray-200 mb-8">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5"></div>
+        <div class="absolute inset-0 opacity-30" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%234F46E5\' fill-opacity=\'0.03\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'4\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"></div>
+        
+        <!-- Content Container -->
+        <div class="relative z-10 p-6 lg:p-8">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
-            <!-- Course code badge -->
-            <div class="status-badge course-code">
-              {{ traineeLectureDetail.lecture.courses.code }}
+            <!-- Course Image -->
+            <div class="lg:col-span-1">
+              <div class="relative group mx-auto max-w-sm">
+                <div class="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-blue-100 bg-white shadow-md group-hover:shadow-lg transition-all duration-300">
+                  <img src="assets/images/default-course.jpg" 
+                       [alt]="traineeLectureDetail.lecture.courses.name"
+                       onerror="this.src='assets/images/default-course.jpg'"
+                       class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                  
+                  <!-- Status Badge -->
+                  <div class="absolute top-3 left-3">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 text-white rounded-full text-sm font-bold shadow-lg"
+                         [class]="'bg-gradient-to-r border ' + getStatusBadgeClasses()">
+                      <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                      {{ getCourseStatus() }}
+                    </div>
+                  </div>
+                  
+                  <!-- Course Code Badge -->
+                  <div class="absolute bottom-3 right-3">
+                    <div class="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-bold shadow-md">
+                      {{ traineeLectureDetail.lecture.courses.code }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Course Information -->
+            <div class="lg:col-span-2 space-y-6">
+              <!-- Course Meta Tags -->
+              <div class="flex flex-wrap gap-2">
+                <div class="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full text-sm font-semibold shadow-md">
+                  <mat-icon class="text-white !text-lg">schedule</mat-icon>
+                  {{ traineeLectureDetail.lecture.courses.days }} ngày
+                </div>
+                <div class="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full text-sm font-semibold shadow-md">
+                  <mat-icon class="text-white !text-lg">access_time</mat-icon>
+                  {{ traineeLectureDetail.lecture.courses.houres }} giờ
+                </div>
+                <div class="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-full text-sm font-semibold shadow-md" *ngIf="traineeLectureDetail.lecture.courses.certCourse === 1">
+                  <mat-icon class="text-white !text-lg">verified</mat-icon>
+                  Có chứng chỉ
+                </div>
+                <div class="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full text-sm font-semibold shadow-md">
+                  <mat-icon class="text-white !text-lg">folder</mat-icon>
+                  {{ traineeLectureDetail.lecture.lecturePages.length }} tài liệu
+                </div>
+              </div>
+              
+              <!-- Course Title -->
+              <div class="space-y-2">
+                <h1 class="text-3xl lg:text-4xl font-bold leading-tight text-gray-900">
+                  {{ traineeLectureDetail.lecture.courses.name }}
+                </h1>
+                <h2 class="text-lg lg:text-xl font-medium text-gray-600 italic" *ngIf="traineeLectureDetail.lecture.courses.eName">
+                  {{ traineeLectureDetail.lecture.courses.eName }}
+                </h2>
+              </div>
+              
+              <!-- Lecture Topic -->
+              <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                  <mat-icon class="text-blue-600 !text-xl">bookmark</mat-icon>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-blue-700 mb-1">Chủ đề bài giảng</div>
+                  <div class="text-base font-medium text-gray-800">{{ traineeLectureDetail.lecture.tittle }}</div>
+                </div>
+              </div>
+              
+              <!-- Course Description -->
+              <div class="space-y-2" *ngIf="traineeLectureDetail.lecture.description">
+                <h3 class="text-lg font-semibold text-gray-800">Mô tả</h3>
+                <p class="text-gray-600 leading-relaxed">
+                  {{ traineeLectureDetail.lecture.description }}
+                </p>
+              </div>
+              
+              <!-- Progress Section -->
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4" *ngIf="isLoggedIn && userProgress > 0">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <mat-icon class="text-green-600">trending_up</mat-icon>
+                    <span class="font-semibold text-green-800">Tiến độ học tập</span>
+                  </div>
+                  <span class="text-2xl font-bold text-green-600">{{ userProgress }}%</span>
+                </div>
+                <div class="w-full bg-green-200 rounded-full h-3 overflow-hidden">
+                  <div class="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full transition-all duration-500" 
+                       [style.width.%]="userProgress"></div>
+                </div>
+                <div class="text-sm text-green-700 mt-2 font-medium">Hoàn thành</div>
+              </div>
             </div>
           </div>
-
-          <div class="course-info">
-            <div class="course-meta">
-              <span class="course-code">Mã: {{ traineeLectureDetail.lecture.courses.code }}</span>
-              <span class="course-days">
-                <mat-icon>schedule</mat-icon>
-                {{ traineeLectureDetail.lecture.courses.days }} ngày ({{ traineeLectureDetail.lecture.courses.halfDays }} buổi)
-              </span>
-            </div>
-
-            <h1>{{ traineeLectureDetail.lecture.courses.name }}</h1>
-            <h2 class="english-name" *ngIf="traineeLectureDetail.lecture.courses.eName">{{ traineeLectureDetail.lecture.courses.eName }}</h2>
-            <p class="lecture-title">Chủ đề: {{ traineeLectureDetail.lecture.tittle }}</p>
-            <p class="course-description" *ngIf="traineeLectureDetail.lecture.description">{{ traineeLectureDetail.lecture.description }}</p>
-
-            <div class="course-stats">
-              <div class="stat-item">
-                <mat-icon>schedule</mat-icon>
-                <span>{{ traineeLectureDetail.lecture.courses.houres }} giờ</span>
-              </div>
-              <div class="stat-item" *ngIf="traineeLectureDetail.lecture.courses.certCourse === 1">
-                <mat-icon>verified</mat-icon>
-                <span>Có chứng chỉ</span>
-              </div>
-              <div class="stat-item">
-                <mat-icon>folder</mat-icon>
-                <span>{{ traineeLectureDetail.lecture.lecturePages.length }} tài liệu</span>
-              </div>
-              <div class="stat-item">
-                <mat-icon>person</mat-icon>
-                <span>Trạng thái: {{ getCourseStatus() }}</span>
+          
+          <!-- Additional Information Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8" 
+               *ngIf="traineeLectureDetail.lecture.objects || traineeLectureDetail.lecture.note || traineeLectureDetail.lecture.courses.note">
+            
+            <!-- Target Audience -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" 
+                 *ngIf="traineeLectureDetail.lecture.objects">
+              <div class="flex items-start gap-3">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                  <mat-icon class="text-blue-600 !text-lg">group</mat-icon>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-800 mb-1">Đối tượng học</div>
+                  <div class="text-sm text-gray-600 leading-relaxed">{{ traineeLectureDetail.lecture.objects }}</div>
+                </div>
               </div>
             </div>
-
-            <!-- Additional info -->
-            <div class="additional-info" *ngIf="traineeLectureDetail.lecture.objects || traineeLectureDetail.lecture.note">
-              <div class="info-item" *ngIf="traineeLectureDetail.lecture.objects">
-                <strong>Đối tượng:</strong>
-                <span>{{ traineeLectureDetail.lecture.objects }}</span>
-              </div>
-              <div class="info-item" *ngIf="traineeLectureDetail.lecture.note">
-                <strong>Ghi chú:</strong>
-                <span>{{ traineeLectureDetail.lecture.note }}</span>
-              </div>
-              <div class="info-item" *ngIf="traineeLectureDetail.lecture.courses.note">
-                <strong>Ghi chú khóa học:</strong>
-                <span>{{ traineeLectureDetail.lecture.courses.note }}</span>
+            
+            <!-- Lecture Note -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" 
+                 *ngIf="traineeLectureDetail.lecture.note">
+              <div class="flex items-start gap-3">
+                <div class="p-2 bg-yellow-100 rounded-lg">
+                  <mat-icon class="text-yellow-600 !text-lg">note</mat-icon>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-800 mb-1">Ghi chú bài giảng</div>
+                  <div class="text-sm text-gray-600 leading-relaxed">{{ traineeLectureDetail.lecture.note }}</div>
+                </div>
               </div>
             </div>
-
-            <!-- User progress (if logged in and enrolled) -->
-            <div class="progress-section" *ngIf="isLoggedIn && userProgress > 0">
-              <h3>Tiến độ học tập</h3>
-              <mat-progress-bar mode="determinate" [value]="userProgress"></mat-progress-bar>
-              <span class="progress-text">{{ userProgress }}% hoàn thành</span>
+            
+            <!-- Course Note -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" 
+                 *ngIf="traineeLectureDetail.lecture.courses.note">
+              <div class="flex items-start gap-3">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                  <mat-icon class="text-purple-600 !text-lg">info</mat-icon>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-800 mb-1">Ghi chú khóa học</div>
+                  <div class="text-sm text-gray-600 leading-relaxed">{{ traineeLectureDetail.lecture.courses.note }}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -97,109 +180,191 @@
           
           <!-- Overview tab -->
           <mat-tab label="Tổng quan">
-            <div class="tab-content">
-              <div class="overview-grid">
+            <div class="p-6 bg-gray-50">
+              <div class="max-w-7xl mx-auto space-y-8">
                 
-                <!-- Course details -->
-                <mat-card class="details-card">
-                  <mat-card-header>
-                    <mat-card-title>Thông tin khóa học</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="detail-list">
-                      <div class="detail-item">
-                        <strong>Mã khóa học:</strong>
-                        <span>{{ traineeLectureDetail.lecture.courses.code }}</span>
+                <!-- Quick Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <!-- Documents Count -->
+                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-4">
+                      <div class="p-3 bg-blue-100 rounded-lg">
+                        <mat-icon class="text-blue-600">folder</mat-icon>
                       </div>
-                      <div class="detail-item">
-                        <strong>Tên tiếng Anh:</strong>
-                        <span>{{ traineeLectureDetail.lecture.courses.eName }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <strong>Thời lượng:</strong>
-                        <span>{{ traineeLectureDetail.lecture.courses.days }} ngày ({{ traineeLectureDetail.lecture.courses.houres }} giờ)</span>
-                      </div>
-                      <div class="detail-item">
-                        <strong>Số buổi:</strong>
-                        <span>{{ traineeLectureDetail.lecture.courses.halfDays }} buổi</span>
-                      </div>
-                      <div class="detail-item">
-                        <strong>Chứng chỉ:</strong>
-                        <span>{{ traineeLectureDetail.lecture.courses.certCourse === 1 ? 'Có' : 'Không' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <strong>Ngày tạo:</strong>
-                        <span>{{ traineeLectureDetail.lecture.created | date:'dd/MM/yyyy HH:mm' }}</span>
-                      </div>
-                      <div class="detail-item">
-                        <strong>Cập nhật:</strong>
-                        <span>{{ traineeLectureDetail.lecture.updated | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <div>
+                        <div class="text-2xl font-bold text-blue-600">{{ traineeLectureDetail.lecture.lecturePages.length }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Tài liệu</div>
                       </div>
                     </div>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Lecture info -->
-                <mat-card class="lecture-info-card">
-                  <mat-card-header>
-                    <mat-card-title>Thông tin bài giảng</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="detail-list">
-                      <div class="detail-item" *ngIf="traineeLectureDetail.lecture.objects">
-                        <strong>Đối tượng học:</strong>
-                        <span>{{ traineeLectureDetail.lecture.objects }}</span>
+                  </div>
+                  
+                  <!-- Course Duration -->
+                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-4">
+                      <div class="p-3 bg-green-100 rounded-lg">
+                        <mat-icon class="text-green-600">schedule</mat-icon>
                       </div>
-                      <div class="detail-item" *ngIf="traineeLectureDetail.lecture.description">
-                        <strong>Mô tả:</strong>
-                        <span>{{ traineeLectureDetail.lecture.description }}</span>
-                      </div>
-                      <div class="detail-item" *ngIf="traineeLectureDetail.lecture.note">
-                        <strong>Ghi chú:</strong>
-                        <span>{{ traineeLectureDetail.lecture.note }}</span>
+                      <div>
+                        <div class="text-2xl font-bold text-green-600">{{ traineeLectureDetail.lecture.courses.days }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Ngày học</div>
                       </div>
                     </div>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Trainee status -->
-                <mat-card class="trainee-status-card">
-                  <mat-card-header>
-                    <mat-card-title>Trạng thái học tập</mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="trainee-info">
-                      <div class="trainee-basic-info">
-                        <strong>Trạng thái học tập:</strong> 
-                        <span class="status-badge" [ngClass]="'status-' + getCourseStatusColor()">
-                          {{ getCourseStatus() }}
-                        </span>
+                  </div>
+                  
+                  <!-- Total Hours -->
+                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-4">
+                      <div class="p-3 bg-orange-100 rounded-lg">
+                        <mat-icon class="text-orange-600">access_time</mat-icon>
                       </div>
-                      <div class="trainee-timeline" *ngIf="traineeLectureDetail.timetStartLearn || traineeLectureDetail.timeCompletedLearn">
-                        <div *ngIf="traineeLectureDetail.timetStartLearn">
-                          <strong>Bắt đầu học:</strong> {{ traineeLectureDetail.timetStartLearn | date:'dd/MM/yyyy HH:mm' }}
+                      <div>
+                        <div class="text-2xl font-bold text-orange-600">{{ traineeLectureDetail.lecture.courses.houres }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Giờ học</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Certificate Status -->
+                  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-4">
+                      <div class="p-3 bg-purple-100 rounded-lg">
+                        <mat-icon class="text-purple-600">{{ traineeLectureDetail.lecture.courses.certCourse === 1 ? 'verified' : 'help_outline' }}</mat-icon>
+                      </div>
+                      <div>
+                        <div class="text-2xl font-bold text-purple-600">{{ traineeLectureDetail.lecture.courses.certCourse === 1 ? 'Có' : 'Không' }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Chứng chỉ</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  
+                  <!-- Course Details -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-xl">info</mat-icon>
                         </div>
-                        <div *ngIf="traineeLectureDetail.timeCompletedLearn">
-                          <strong>Hoàn thành:</strong> {{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}
+                        <h3 class="text-xl font-bold">Thông tin khóa học</h3>
+                      </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                      <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                        <span class="font-semibold text-gray-700">Mã khóa học:</span>
+                        <span class="text-gray-900 font-medium">{{ traineeLectureDetail.lecture.courses.code }}</span>
+                      </div>
+                      <div class="flex justify-between items-start py-3 border-b border-gray-100" *ngIf="traineeLectureDetail.lecture.courses.eName">
+                        <span class="font-semibold text-gray-700">Tên tiếng Anh:</span>
+                        <span class="text-gray-900 font-medium text-right">{{ traineeLectureDetail.lecture.courses.eName }}</span>
+                      </div>
+                      <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                        <span class="font-semibold text-gray-700">Thời lượng:</span>
+                        <span class="text-gray-900 font-medium">{{ traineeLectureDetail.lecture.courses.days }} ngày</span>
+                      </div>
+                      <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                        <span class="font-semibold text-gray-700">Số buổi:</span>
+                        <span class="text-gray-900 font-medium">{{ traineeLectureDetail.lecture.courses.halfDays }} buổi</span>
+                      </div>
+                      <div class="flex justify-between items-center py-3 border-b border-gray-100">
+                        <span class="font-semibold text-gray-700">Ngày tạo:</span>
+                        <span class="text-gray-900 font-medium">{{ traineeLectureDetail.lecture.created | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                      <div class="flex justify-between items-center py-3">
+                        <span class="font-semibold text-gray-700">Cập nhật:</span>
+                        <span class="text-gray-900 font-medium">{{ traineeLectureDetail.lecture.updated | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Lecture Information -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-500 to-teal-600 px-6 py-4">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-xl">school</mat-icon>
+                        </div>
+                        <h3 class="text-xl font-bold">Thông tin bài giảng</h3>
+                      </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                      <div *ngIf="traineeLectureDetail.lecture.objects" class="space-y-2">
+                        <span class="font-semibold text-gray-700 block">Đối tượng học:</span>
+                        <p class="text-gray-900 leading-relaxed bg-gray-50 p-3 rounded-lg">{{ traineeLectureDetail.lecture.objects }}</p>
+                      </div>
+                      
+                      <div *ngIf="traineeLectureDetail.lecture.description" class="space-y-2">
+                        <span class="font-semibold text-gray-700 block">Mô tả:</span>
+                        <p class="text-gray-900 leading-relaxed bg-gray-50 p-3 rounded-lg">{{ traineeLectureDetail.lecture.description }}</p>
+                      </div>
+                      
+                      <div *ngIf="traineeLectureDetail.lecture.note" class="space-y-2">
+                        <span class="font-semibold text-gray-700 block">Ghi chú:</span>
+                        <p class="text-gray-900 leading-relaxed bg-gray-50 p-3 rounded-lg">{{ traineeLectureDetail.lecture.note }}</p>
+                      </div>
+                      
+                      <div *ngIf="!traineeLectureDetail.lecture.objects && !traineeLectureDetail.lecture.description && !traineeLectureDetail.lecture.note" class="text-center py-8">
+                        <mat-icon class="text-gray-400 text-4xl mb-2">description</mat-icon>
+                        <p class="text-gray-500">Chưa có thông tin chi tiết</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Learning Status -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-xl">trending_up</mat-icon>
+                        </div>
+                        <h3 class="text-xl font-bold">Trạng thái học tập</h3>
+                      </div>
+                    </div>
+                    <div class="p-6 space-y-6">
+                      <!-- Current Status -->
+                      <div class="text-center">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full" [class]="'bg-' + getCourseStatusColor() + '-100 text-' + getCourseStatusColor() + '-800'">
+                          <mat-icon class="text-lg">{{ getStatusIcon(traineeLectureDetail.statusLearn) }}</mat-icon>
+                          <span class="font-bold">{{ getCourseStatus() }}</span>
                         </div>
                       </div>
                       
-                      <!-- Learning progress summary -->
-                      <div class="learning-summary" *ngIf="traineeLectureDetail.lecturePageTrainees && traineeLectureDetail.lecturePageTrainees.length > 0">
-                        <div class="progress-overview">
-                          <strong>Tiến độ học tập:</strong>
-                          <div class="progress-stats">
-                            <span class="completed-count">{{ getCompletedPagesCount() }}/{{ traineeLectureDetail.lecture.lecturePages.length }} tài liệu đã hoàn thành</span>
-                            <div class="progress-bar-mini">
-                              <div class="progress-fill" [style.width.%]="getOverallProgress()"></div>
-                            </div>
-                            <span class="progress-percentage">{{ getOverallProgress() }}%</span>
+                      <!-- Learning Timeline -->
+                      <div class="space-y-4" *ngIf="traineeLectureDetail.timetStartLearn || traineeLectureDetail.timeCompletedLearn">
+                        <div class="border-l-4 border-blue-500 pl-4 py-2" *ngIf="traineeLectureDetail.timetStartLearn">
+                          <div class="flex items-center gap-2 mb-1">
+                            <mat-icon class="text-blue-500 text-lg">play_arrow</mat-icon>
+                            <span class="font-semibold text-gray-700">Bắt đầu học</span>
                           </div>
+                          <p class="text-gray-600">{{ traineeLectureDetail.timetStartLearn | date:'dd/MM/yyyy HH:mm' }}</p>
+                        </div>
+                        
+                        <div class="border-l-4 border-green-500 pl-4 py-2" *ngIf="traineeLectureDetail.timeCompletedLearn">
+                          <div class="flex items-center gap-2 mb-1">
+                            <mat-icon class="text-green-500 text-lg">check_circle</mat-icon>
+                            <span class="font-semibold text-gray-700">Hoàn thành</span>
+                          </div>
+                          <p class="text-gray-600">{{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}</p>
                         </div>
                       </div>
+                      
+                      <!-- Progress Summary -->
+                      <div class="bg-blue-50 rounded-xl p-4" *ngIf="traineeLectureDetail.lecturePageTrainees && traineeLectureDetail.lecturePageTrainees.length > 0">
+                        <div class="flex justify-between items-center mb-3">
+                          <span class="font-semibold text-blue-900">Tiến độ học tập</span>
+                          <span class="text-blue-700 font-bold">{{ getCompletionPercentage() }}%</span>
+                        </div>
+                        <div class="w-full bg-blue-200 rounded-full h-2 mb-3">
+                          <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" [style.width.%]="getCompletionPercentage()"></div>
+                        </div>
+                        <p class="text-blue-700 text-sm">{{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} tài liệu đã hoàn thành</p>
+                      </div>
                     </div>
-                  </mat-card-content>
-                </mat-card>
+                  </div>
+                  
+                </div>
               </div>
             </div>
           </mat-tab>
@@ -244,7 +409,7 @@
                         <div class="bg-blue-50 rounded-xl p-6 border border-blue-100 hover:shadow-md transition-shadow">
                           <div class="flex items-center gap-4">
                             <div class="p-3 bg-blue-500 rounded-xl">
-                              <mat-icon class="text-white text-2xl">folder_copy</mat-icon>
+                              <mat-icon class="text-white">folder_copy</mat-icon>
                             </div>
                             <div>
                               <div class="text-3xl font-bold text-blue-700">{{ getTotalPagesCount() }}</div>
@@ -257,7 +422,7 @@
                         <div class="bg-green-50 rounded-xl p-6 border border-green-100 hover:shadow-md transition-shadow">
                           <div class="flex items-center gap-4">
                             <div class="p-3 bg-green-500 rounded-xl">
-                              <mat-icon class="text-white text-2xl">check_circle</mat-icon>
+                              <mat-icon class="text-white">check_circle</mat-icon>
                             </div>
                             <div>
                               <div class="text-3xl font-bold text-green-700">{{ getCompletedPagesCount() }}</div>
@@ -267,14 +432,14 @@
                         </div>
                         
                         <!-- Progress Percentage -->
-                        <div class="bg-orange-50 rounded-xl p-6 border border-orange-100 hover:shadow-md transition-shadow">
+                        <div class="bg-red-50 rounded-xl p-6 border border-red-100 hover:shadow-md transition-shadow">
                           <div class="flex items-center gap-4">
-                            <div class="p-3 bg-orange-500 rounded-xl">
-                              <mat-icon class="text-white text-2xl">trending_up</mat-icon>
+                            <div class="p-3 bg-red-500 rounded-xl">
+                              <mat-icon class="text-white">trending_up</mat-icon>
                             </div>
                             <div>
-                              <div class="text-3xl font-bold text-orange-700">{{ getCompletionPercentage() }}%</div>
-                              <div class="text-sm font-medium text-orange-600">Tiến độ</div>
+                              <div class="text-3xl font-bold text-red-700">{{ getCompletionPercentage() }}%</div>
+                              <div class="text-sm font-medium text-red-600">Tiến độ</div>
                             </div>
                           </div>
                         </div>
@@ -283,7 +448,7 @@
                         <div class="bg-purple-50 rounded-xl p-6 border border-purple-100 hover:shadow-md transition-shadow">
                           <div class="flex items-center gap-4">
                             <div class="p-3 bg-purple-500 rounded-xl">
-                              <mat-icon class="text-white text-2xl">schedule</mat-icon>
+                              <mat-icon class="text-white">schedule</mat-icon>
                             </div>
                             <div>
                               <div class="text-3xl font-bold text-purple-700">{{ traineeLectureDetail.lecture.courses.houres }}</div>
@@ -319,7 +484,7 @@
                     <div class="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
                       <div class="flex items-center gap-3 text-white">
                         <div class="p-2 bg-white/20 rounded-lg">
-                          <mat-icon class="text-2xl">play_lesson</mat-icon>
+                          <mat-icon>play_lesson</mat-icon>
                         </div>
                         <h3 class="text-2xl font-bold">Điều khiển học tập</h3>
                       </div>
@@ -330,11 +495,11 @@
                       <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
                         <div class="flex items-center gap-6">
                           <div class="p-4 rounded-xl" [class]="'bg-' + getCourseStatusColor() + '-500'">
-                            <mat-icon class="text-white text-3xl">{{ getStatusIcon(traineeLectureDetail?.statusLearn) }}</mat-icon>
+                            <mat-icon class="text-white text-3xl">{{ getStatusIcon(traineeLectureDetail.statusLearn) }}</mat-icon>
                           </div>
                           <div class="flex-1">
                             <h4 class="text-xl font-bold text-gray-800 mb-2">{{ getCourseStatus() }}</h4>
-                            <p class="text-gray-600 leading-relaxed">{{ getStatusDescription(traineeLectureDetail?.statusLearn) }}</p>
+                            <p class="text-gray-600 leading-relaxed">{{ getStatusDescription(traineeLectureDetail.statusLearn) }}</p>
                           </div>
                         </div>
                       </div>
@@ -381,14 +546,14 @@
                           Bắt đầu học ngay
                         </button>
                         
-                        <button mat-raised-button 
+                        <!-- <button mat-raised-button 
                                 color="accent"
                                 class="px-8 py-3 text-lg font-semibold"
                                 *ngIf="isLearningStarted && getCurrentPageInfo().page && !isCurrentPageCompleted()"
                                 (click)="finishCurrentPage()">
                           <mat-icon class="mr-3">check_circle</mat-icon>
                           Hoàn thành trang này
-                        </button>
+                        </button> -->
                         
                         <button mat-stroked-button 
                                 color="primary"
@@ -413,7 +578,7 @@
                       <div class="text-center" *ngIf="isCourseCompleted()">
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8">
                           <div class="inline-flex items-center justify-center w-24 h-24 bg-green-500 rounded-full mb-6">
-                            <mat-icon class="text-white text-5xl">celebration</mat-icon>
+                            <mat-icon class="text-white">celebration</mat-icon>
                           </div>
                           <h3 class="text-3xl font-bold text-green-800 mb-3">Chúc mừng!</h3>
                           <p class="text-green-700 text-xl mb-4">Bạn đã hoàn thành khóa học này thành công!</p>
@@ -525,11 +690,8 @@
                 </div>
               </div>
             </div>
-          </mat-tab>
-          
-        </mat-tab-group>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 min-h-screen" *ngIf="!showLectureViewer">
+
+                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 min-h-screen" *ngIf="!showLectureViewer">
         
         <!-- Documents Sidebar (Left Column) -->
         <div class="lg:col-span-1 bg-gray-50 border-r border-gray-200 flex flex-col shadow-lg">
@@ -570,8 +732,8 @@
               
               <!-- Status Indicator based on StatusLearn -->
               <div class="absolute top-3 right-3">
-                <mat-icon *ngIf="isPageCompleted(page)" class="text-green-500 text-lg">check_circle</mat-icon>
-                <mat-icon *ngIf="isPageInProgress(page)" class="text-blue-500 text-lg animate-pulse">play_circle</mat-icon>
+                <mat-icon *ngIf="isPageCompleted(page)" class="text-green-500">check_circle</mat-icon>
+                <mat-icon *ngIf="isPageInProgress(page)" class="text-blue-500 animate-pulse">play_circle</mat-icon>
                 <mat-icon *ngIf="!isPageCompleted(page) && !isPageInProgress(page)" class="text-gray-400 text-lg">radio_button_unchecked</mat-icon>
               </div>
               
@@ -579,7 +741,7 @@
                 <div mat-card-avatar [class]="'flex items-center justify-center w-10 h-10 rounded-full ' +
                                             (isPageCompleted(page) ? 'bg-green-500' : 
                                             (isPageInProgress(page) ? 'bg-blue-500' : 'bg-gray-400'))">
-                  <mat-icon class="text-white text-lg">{{ getLecturePageTypeIcon(page.typeLecturePage) }}</mat-icon>
+                  <mat-icon class="text-white">{{ getLecturePageTypeIcon(page.typeLecturePage) }}</mat-icon>
                 </div>
                 <mat-card-title class="text-sm font-semibold text-gray-800 line-clamp-2">{{ page.tittle }}</mat-card-title>
                 <mat-card-subtitle class="text-xs text-gray-600">
@@ -711,7 +873,7 @@
                     Bắt đầu học ngay
                   </button>
                   
-                  <button 
+                  <!-- <button 
                     mat-raised-button 
                     color="accent"
                     size="large"
@@ -720,7 +882,7 @@
                     class="px-8 py-3">
                     <mat-icon class="mr-2">check</mat-icon>
                     Hoàn thành trang này
-                  </button>
+                  </button> -->
                 </div>
                 
                 <!-- Complete Course Button (chỉ hiển thị khi tất cả trang đã hoàn thành) -->
@@ -739,7 +901,7 @@
                 <!-- Course Completed Message -->
                 <div *ngIf="isCourseCompleted()" class="mt-4 text-center">
                   <div class="bg-green-50 border border-green-200 rounded-xl p-6">
-                    <mat-icon class="text-green-500 text-5xl mb-2">celebration</mat-icon>
+                    <mat-icon class="text-green-500 mb-2">celebration</mat-icon>
                     <h3 class="text-xl font-bold text-green-800 mb-2">Chúc mừng!</h3>
                     <p class="text-green-700">Bạn đã hoàn thành khóa học này thành công!</p>
                     <div class="text-sm text-green-600 mt-2" *ngIf="traineeLectureDetail.timeCompletedLearn">
@@ -939,7 +1101,9 @@
             </div>
         </div>
       </div>
-    
     </div>
-  </div>
+  </mat-tab>
+</mat-tab-group>
+</div> 
+</div>
 </div>
