@@ -159,9 +159,12 @@ export class CourseListComponent implements OnInit, OnDestroy {
       request.Title = this.searchTitle.trim();
     }
 
-    // Thêm status filter nếu có
+    // Thêm status filter - mặc định -1 để lấy tất cả khóa học
     if (this.selectedStatusLearn !== '' && this.selectedStatusLearn !== undefined) {
       request.StatusLearn = this.selectedStatusLearn as StatusLearn;
+    } else {
+      // Truyền -1 để lấy tất cả trạng thái
+      request.StatusLearn = StatusLearn.All;
     }
 
     const request$ = this.traineeLectureService.getTraineeLectures(request);

@@ -1,314 +1,52 @@
 :host {
   display: block;
-  font-family: 'Roboto', sans-serif;
-  background-color: #f4f7fc;
+  font-family: 'Inter', 'Roboto', sans-serif;
 }
 
-.introduction-container {
-  width: 100%;
-  overflow: hidden;
-}
-
-.page-header {
-  background-color: #e9f2ff;
-  padding: 60px 0;
-  position: relative;
-  overflow: hidden;
-
-  .header-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
+// Custom animations cho các hiệu ứng Tailwind
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-
-  .header-content {
-    display: flex;
-    align-items: center;
-    gap: 50px;
-  }
-
-  .header-text {
-    color: #0d47a1;
-    h1 {
-      font-size: 48px;
-      font-weight: 800;
-      margin-bottom: 16px;
-    }
-    .subtitle {
-      font-size: 20px;
-      color: #1565c0;
-    }
-  }
-
-  .video-placeholder {
-    width: 200px;
-    height: 120px;
-    background-color: #0d47a1;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease;
-
-    &:hover {
-      transform: scale(1.05);
-    }
-
-    .play-button {
-      width: 60px;
-      height: 60px;
-      background-color: rgba(255, 255, 255, 0.9);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      mat-icon {
-        color: #0d47a1;
-      }
-    }
-  }
-
-  .decorative-dots {
-    position: absolute;
-    top: 20px;
-    left: 5%;
-    width: 150px;
-    height: 100px;
-    background-image: radial-gradient(#b3d4fc 15%, transparent 15%);
-    background-size: 15px 15px;
-    opacity: 0.6;
-    z-index: 1;
-  }
-
-  .decorative-circle {
-    position: absolute;
-    border-radius: 50%;
-    background-color: #d0e5ff;
-    z-index: 1;
-
-    &.circle-1 {
-      width: 200px;
-      height: 200px;
-      bottom: -100px;
-      right: 15%;
-    }
-
-    &.circle-2 {
-      width: 80px;
-      height: 80px;
-      top: 30px;
-      right: 10%;
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.stats-section {
-  background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
-  padding: 60px 0;
-  color: white;
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 40px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .stat-item {
-    text-align: center;
-    padding: 20px;
-    border-radius: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-5px);
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: #ffffff;
-      margin-bottom: 15px;
-      opacity: 0.9;
-    }
-
-    .stat-number {
-      font-size: 36px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: #ffffff;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.8);
-      letter-spacing: 1px;
-    }
-  }
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
 }
 
-.page-content {
-  padding: 60px 0;
+// Custom styles cho Mat Icons trong Tailwind context
+mat-icon {
+  line-height: inherit;
+  vertical-align: middle;
 }
 
-.section {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 40px;
-  margin-bottom: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-
-  .section-title {
-    font-size: 36px;
-    font-weight: 700;
-    margin-bottom: 30px;
-    text-align: center;
-    position: relative;
-    color: #0d47a1;
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 4px;
-      background: #1976d2;
-      border-radius: 2px;
-    }
-  }
-
-  p {
-    font-size: 17px;
-    line-height: 1.8;
-    color: #333;
-    text-align: justify;
-  }
+// Smooth scroll behavior
+html {
+  scroll-behavior: smooth;
 }
 
-.vision-mission {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  text-align: center;
-
-  .vision, .mission {
-    padding: 30px;
-    mat-icon {
-      color: #1976d2;
-      margin-bottom: 20px;
-    }
-    h3 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      color: #0d47a1;
-    }
-    p {
-      color: #555;
-      font-size: 16px;
-      text-align: center;
-    }
-  }
+// Custom gradient text effect
+.gradient-text {
+  @apply bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent;
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-
-  .feature-item {
-    background: #f4f7fc;
-    border-radius: 15px;
-    padding: 30px;
-    text-align: center;
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-    }
-
-    mat-icon {
-      color: #1976d2;
-      margin-bottom: 20px;
-    }
-
-    h4 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      color: #0d47a1;
-    }
-
-    p {
-      color: #555;
-      font-size: 15px;
-      text-align: center;
-    }
-  }
+// Custom button hover effects
+.btn-hover-effect {
+  @apply transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
 }
 
-@media (max-width: 768px) {
-  .page-header {
-    padding: 40px 0;
-    .header-content {
-      flex-direction: column;
-      text-align: center;
-    }
-    .video-placeholder {
-      width: 180px;
-      height: 100px;
-    }
-  }
+// Custom card hover effects
+.card-hover-effect {
+  @apply transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg;
+}
 
-  .section {
-    padding: 30px 20px;
-  }
-
-  .vision-mission {
-    grid-template-columns: 1fr;
-  }
-
-  .stats-section {
-    padding: 40px 0;
-
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      padding: 0 20px;
-    }
-
-    .stat-item {
-      padding: 15px;
-
-      mat-icon {
-        font-size: 36px;
-        width: 36px;
-        height: 36px;
-      }
-
-      .stat-number {
-        font-size: 28px;
-      }
-
-      .stat-label {
-        font-size: 12px;
-      }
-    }
-  }
+// Custom backdrop blur effect
+.backdrop-blur-glass {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }

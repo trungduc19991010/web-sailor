@@ -1,166 +1,165 @@
-<!-- Trang chủ theo mẫu VTC EDU -->
-<div class="home-container">
-  <!-- Loading spinner cho toàn bộ trang -->
-  <div class="loading-container" *ngIf="homeDataLoading">
+<!-- Trang chủ hiện đại với Tailwind CSS -->
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <!-- Loading State -->
+  <div class="flex flex-col items-center justify-center py-32 px-6" *ngIf="homeDataLoading">
     <mat-spinner diameter="50"></mat-spinner>
-    <p>Đang tải dữ liệu...</p>
+    <p class="text-gray-600 text-lg mt-6">Đang tải dữ liệu...</p>
   </div>
 
-  <!-- Nội dung chính -->
+  <!-- Main Content -->
   <div *ngIf="!homeDataLoading">
-    <!-- Thống kê tổng quan -->
-    <section class="stats-section" *ngIf="stats">
-      <div class="container">
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-icon">
-              <mat-icon>visibility</mat-icon>
+    <!-- Hero Statistics Section -->
+    <section class="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 py-20 lg:py-24 overflow-hidden" *ngIf="stats">
+      <!-- Background decorations -->
+      <div class="absolute inset-0 bg-black bg-opacity-10"></div>
+      <div class="absolute inset-0 opacity-20">
+        <div class="w-full h-full" style="background-image: url('data:image/svg+xml;utf8,<svg width=&quot;40&quot; height=&quot;40&quot; viewBox=&quot;0 0 40 40&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;><g fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.05&quot; fill-rule=&quot;evenodd&quot;><path d=&quot;m0 40l40-40v40zm40 0v-40l-40 40z&quot;/></g></svg>')"></div>
+      </div>
+      
+      <!-- Animated circles -->
+      <div class="absolute -top-10 -right-10 w-80 h-80 bg-white bg-opacity-10 rounded-full animate-pulse"></div>
+      <div class="absolute -bottom-16 -left-16 w-96 h-96 bg-white bg-opacity-5 rounded-full animate-pulse delay-700"></div>
+      
+      <div class="relative z-10 container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h1 class="text-4xl lg:text-5xl font-extrabold text-white mb-4">
+            Thống kê ấn tượng
+          </h1>
+          <p class="text-xl text-blue-100 max-w-3xl mx-auto">
+            Những con số khẳng định vị thế hàng đầu của VOSCO EDU trong lĩnh vực đào tạo hàng hải
+          </p>
+        </div>
+        
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+          <!-- Stat 1 -->
+          <div class="text-center group">
+           <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 lg:p-8 hover:bg-opacity-20 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <mat-icon class="text-white">visibility</mat-icon>
             </div>
-            <div class="stat-number">{{ stats.totalAccess | number }}</div>
-            <div class="stat-label">TRUY CẬP</div>
+              <div class="text-3xl lg:text-4xl font-extrabold text-white mb-2">{{ stats.totalAccess | number }}</div>
+              <div class="text-white text-opacity-80 font-semibold text-sm tracking-widest">TRUY CẬP</div>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-icon">
-              <mat-icon>school</mat-icon>
+          
+          <!-- Stat 2 -->
+          <div class="text-center group">
+           <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 lg:p-8 hover:bg-opacity-20 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <mat-icon class="text-white">school</mat-icon>
             </div>
-            <div class="stat-number">{{ stats.totalStudents | number }}</div>
-            <div class="stat-label">ĐÃ HỌC</div>
+              <div class="text-3xl lg:text-4xl font-extrabold text-white mb-2">{{ stats.totalStudents | number }}</div>
+              <div class="text-white text-opacity-80 font-semibold text-sm tracking-widest">ĐÃ HỌC</div>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-icon">
-              <mat-icon>book</mat-icon>
+          
+          <!-- Stat 3 -->
+          <div class="text-center group">
+           <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 lg:p-8 hover:bg-opacity-20 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <mat-icon class="text-white">menu_book</mat-icon>
             </div>
-            <div class="stat-number">{{ stats.totalLessons | number }}</div>
-            <div class="stat-label">BÀI HỌC</div>
+              <div class="text-3xl lg:text-4xl font-extrabold text-white mb-2">{{ stats.totalLessons | number }}</div>
+              <div class="text-white text-opacity-80 font-semibold text-sm tracking-widest">BÀI HỌC</div>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-icon">
-              <mat-icon>person</mat-icon>
+          
+          <!-- Stat 4 -->
+          <div class="text-center group">
+             <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 lg:p-8 hover:bg-opacity-20 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <mat-icon class="text-white">person</mat-icon>
             </div>
-            <div class="stat-number">{{ stats.totalInstructors | number }}</div>
-            <div class="stat-label">GIẢNG VIÊN</div>
+              <div class="text-3xl lg:text-4xl font-extrabold text-white mb-2">{{ stats.totalInstructors | number }}</div>
+              <div class="text-white text-opacity-80 font-semibold text-sm tracking-widest">GIẢNG VIÊN</div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Lĩnh vực đào tạo -->
-    <section class="fields-section" *ngIf="trainingFields.length > 0">
-      <div class="container">
-        <div class="section-header">
-          <h2>Lĩnh vực đào tạo</h2>
-          <p>Chúng tôi cung cấp hệ thống học đa dạng ngành nghề trong lĩnh vực</p>
+    <!-- Training Fields Section -->
+    <section class="py-20 lg:py-24 bg-white" *ngIf="trainingFields.length > 0">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4 relative inline-block">
+            Lĩnh vực đào tạo
+            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+          </h2>
+          <p class="text-lg text-gray-600 max-w-3xl mx-auto mt-6">
+            Chúng tôi cung cấp hệ thống học đa dạng ngành nghề trong lĩnh vực hàng hải
+          </p>
         </div>
 
-        <div class="fields-grid">
-          <div class="field-card"
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100"
                *ngFor="let field of trainingFields; trackBy: trackByFieldId"
                (click)="onTrainingFieldClick(field)"
                role="button"
                tabindex="0">
-            <div class="field-icon">
-              <mat-icon>{{ field.icon }}</mat-icon>
+            
+            <div class="text-center mb-6">
+              <div class="mx-auto mb-4 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl text-blue-600 flex items-center justify-center w-fit group-hover:scale-110 transition-transform duration-300">
+                <mat-icon class="text-3xl">{{ field.icon }}</mat-icon>
+              </div>
             </div>
-            <div class="field-info">
-              <div class="course-count">{{ field.courseCount }} Khóa học</div>
-              <div class="field-name">{{ field.name }}</div>
-              <div class="field-description" *ngIf="field.description">
+            
+            <div class="text-center">
+              <div class="text-lg font-bold text-blue-600 mb-3">{{ field.courseCount }} Khóa học</div>
+              <h3 class="text-xl font-bold text-gray-800 mb-3">{{ field.name }}</h3>
+              <p class="text-gray-600 text-sm leading-relaxed" *ngIf="field.description">
                 {{ field.description }}
-              </div>
+              </p>
+            </div>
+            
+            <!-- Hover indicator -->
+            <div class="mt-6 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span class="inline-flex items-center text-blue-600 font-medium text-sm">
+                Xem chi tiết
+                <mat-icon class="ml-1 text-sm">arrow_forward</mat-icon>
+              </span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Khóa học nổi bật -->
-    <section class="featured-courses" *ngIf="featuredCourses.length > 0">
-      <div class="container">
-        <div class="section-header">
-          <h2>Khóa học nổi bật</h2>
-          <p>Các khóa học được đánh giá cao và nhiều người tham gia</p>
+
+    <!-- Digital Education Platform Section -->
+    <section class="py-20 lg:py-24 bg-gradient-to-br from-gray-50 to-gray-100" *ngIf="platformFeatures.length > 0">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4 relative inline-block">
+            NỀN TẢNG GIÁO DỤC ĐÀO TẠO SỐ
+            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"></div>
+          </h2>
+          <p class="text-lg text-gray-600 max-w-3xl mx-auto mt-6">
+            Website cung cấp các chức năng, thông tin giải pháp hiện đại, dễ dàng sử dụng
+          </p>
         </div>
 
-        <div class="courses-grid">
-          <mat-card class="course-card"
-                    *ngFor="let course of featuredCourses; trackBy: trackByCourseId"
-                    (click)="onCourseClick(course)">
-            <div class="course-badge" *ngIf="course.featured">Nổi bật</div>
-            <mat-card-header>
-              <mat-card-title>{{ course.title }}</mat-card-title>
-              <mat-card-subtitle>
-                <div class="course-rating">
-                  <span class="rating-stars">★★★★★</span>
-                  <span class="rating-text">{{ course.rating }} ({{ course.reviews }})</span>
-                </div>
-                <div class="course-instructor" *ngIf="course.instructor">
-                  <mat-icon>person</mat-icon>
-                  {{ course.instructor }}
-                </div>
-              </mat-card-subtitle>
-            </mat-card-header>
-
-            <mat-card-content>
-              <p>{{ course.description }}</p>
-              <div class="course-meta">
-                <span class="duration">
-                  <mat-icon>schedule</mat-icon>
-                  {{ course.duration }}
-                </span>
-                <span class="level" *ngIf="course.level">
-                  <mat-icon>signal_cellular_alt</mat-icon>
-                  {{ course.level }}
-                </span>
-                <span class="price" *ngIf="course.price === 0">
-                  <mat-icon>money_off</mat-icon>
-                  Miễn phí
-                </span>
-              </div>
-            </mat-card-content>
-
-            <mat-card-actions>
-              <button mat-raised-button
-                      color="primary"
-                      (click)="onEnrollCourse(course); $event.stopPropagation()">
-                Học ngay
-              </button>
-              <button mat-button
-                      (click)="onCourseClick(course); $event.stopPropagation()">
-                Chi tiết
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
-      </div>
-    </section>
-
-    <!-- Nền tảng giáo dục số -->
-    <section class="platform-features" *ngIf="platformFeatures.length > 0">
-      <div class="container">
-        <div class="section-header">
-          <h2>NỀN TẢNG GIÁO DỤC ĐÀO TẠO SỐ</h2>
-          <p>Website cung cấp các chức năng, thông tin giải pháp, dễ dàng sử dụng</p>
-        </div>
-
-        <div class="features-grid">
-          <div class="feature-item"
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div class="group text-center p-8 bg-white rounded-3xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2"
                *ngFor="let feature of platformFeatures; trackBy: trackByFeatureId">
-            <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
-            <h3>{{ feature.title }}</h3>
-            <p>{{ feature.description }}</p>
+            
+            <div class="mx-auto mb-6 p-4 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl text-emerald-600 flex items-center justify-center w-fit group-hover:scale-110 transition-transform duration-300">
+              <mat-icon class="text-3xl">{{ feature.icon }}</mat-icon>
+            </div>
+            
+            <h3 class="text-xl font-bold text-gray-800 mb-4">{{ feature.title }}</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">{{ feature.description }}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Refresh button (for development/testing) -->
-    <section class="refresh-section" *ngIf="!homeDataLoading">
-      <div class="container">
-        <div class="refresh-actions">
-          <button mat-raised-button
-                  color="accent"
+    <!-- Refresh Section (for development/testing) -->
+    <section class="py-16 bg-white border-t border-gray-200" *ngIf="!homeDataLoading">
+      <div class="container mx-auto px-6">
+        <div class="text-center">
+          <button class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   (click)="refreshHomeData()">
-            <mat-icon>refresh</mat-icon>
+            <mat-icon class="mr-2">refresh</mat-icon>
             Làm mới dữ liệu
           </button>
         </div>

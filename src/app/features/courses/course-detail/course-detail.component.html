@@ -478,212 +478,8 @@
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- Learning Control Section -->
-                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
-                      <div class="flex items-center gap-3 text-white">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                          <mat-icon>play_lesson</mat-icon>
-                        </div>
-                        <h3 class="text-2xl font-bold">Điều khiển học tập</h3>
-                      </div>
-                    </div>
-                    
-                    <div class="p-8 space-y-6">
-                      <!-- Current Status Display -->
-                      <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
-                        <div class="flex items-center gap-6">
-                          <div class="p-4 rounded-xl" [class]="'bg-' + getCourseStatusColor() + '-500'">
-                            <mat-icon class="text-white">{{ getStatusIcon(traineeLectureDetail.statusLearn) }}</mat-icon>
-                          </div>
-                          <div class="flex-1">
-                            <h4 class="text-xl font-bold text-gray-800 mb-2">{{ getCourseStatus() }}</h4>
-                            <p class="text-gray-600 leading-relaxed">{{ getStatusDescription(traineeLectureDetail.statusLearn) }}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <!-- Current Page Info -->
-                      <div class="space-y-4" *ngIf="isLearningStarted">
-                        <div class="bg-white border-2 border-blue-200 rounded-xl p-6" *ngIf="getCurrentPageInfo().page; else completedMessage">
-                          <div class="flex items-center gap-4">
-                            <div class="p-3 rounded-xl" [style.background-color]="getTypeColor(getCurrentPageInfo().page!.typeLecturePage) + '20'">
-                              <mat-icon class="text-2xl" [style.color]="getTypeColor(getCurrentPageInfo().page!.typeLecturePage)">
-                                {{ getLecturePageTypeIcon(getCurrentPageInfo().page!.typeLecturePage) }}
-                              </mat-icon>
-                            </div>
-                            <div class="flex-1">
-                              <h4 class="text-lg font-semibold text-gray-800 mb-1">Tài liệu hiện tại</h4>
-                              <h5 class="text-xl font-bold text-gray-900 mb-2">{{ getCurrentPageInfo().page?.tittle }}</h5>
-                              <p class="text-sm text-gray-600">
-                                {{ getLecturePageTypeDisplayText(getCurrentPageInfo().page!.typeLecturePage) }} • 
-                                Trang {{ getCurrentPageInfo().current }}/{{ getCurrentPageInfo().total }}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <ng-template #completedMessage>
-                          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center">
-                            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-4">
-                              <mat-icon class="text-white text-4xl">celebration</mat-icon>
-                            </div>
-                            <h4 class="text-2xl font-bold text-green-800 mb-2">Hoàn thành xuất sắc!</h4>
-                            <p class="text-green-700 text-lg">Bạn đã hoàn thành {{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} tài liệu.</p>
-                          </div>
-                        </ng-template>
-                      </div>
-                      
-                      <!-- Action Buttons -->
-                      <div class="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-                        <button mat-raised-button 
-                                color="primary"
-                                class="px-8 py-3 text-lg font-semibold"
-                                *ngIf="!isLearningStarted && canStartLearning()"
-                                (click)="startLearning()">
-                          <mat-icon class="mr-3">play_arrow</mat-icon>
-                          Bắt đầu học ngay
-                        </button>
-                        
-                        
-                        <button mat-stroked-button 
-                                color="primary"
-                                class="px-6 py-3"
-                                *ngIf="getCompletedPagesCount() > 0">
-                          <mat-icon class="mr-2">replay</mat-icon>
-                          Ôn tập lại
-                        </button>
-                        
-                        <!-- Complete Course Button -->
-                        <button mat-raised-button 
-                                color="warn"
-                                class="px-12 py-4 text-xl font-bold"
-                                *ngIf="areAllPagesCompleted() && !isCourseCompleted()"
-                                (click)="finishCourse()">
-                          <mat-icon class="mr-3 text-2xl">emoji_events</mat-icon>
-                          Hoàn thành khóa học
-                        </button>
-                      </div>
-                      
-                      <!-- Course Completed Message -->
-                      <div class="text-center" *ngIf="isCourseCompleted()">
-                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8">
-                          <div class="inline-flex items-center justify-center w-24 h-24 bg-green-500 rounded-full mb-6">
-                            <mat-icon class="text-white">celebration</mat-icon>
-                          </div>
-                          <h3 class="text-3xl font-bold text-green-800 mb-3">Chúc mừng!</h3>
-                          <p class="text-green-700 text-xl mb-4">Bạn đã hoàn thành khóa học này thành công!</p>
-                          <div class="inline-flex items-center gap-2 text-green-600 font-medium" *ngIf="traineeLectureDetail.timeCompletedLearn">
-                            <mat-icon class="text-lg">event</mat-icon>
-                            <span>Hoàn thành vào: {{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- User Guide Section -->
-                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
-                      <div class="flex items-center gap-3 text-white">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                          <mat-icon class="text-2xl">help_outline</mat-icon>
-                        </div>
-                        <h3 class="text-2xl font-bold">Hướng dẫn sử dụng</h3>
-                      </div>
-                    </div>
-                    
-                    <div class="p-8">
-                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- Guide Steps -->
-                        <div class="space-y-6">
-                          <h4 class="text-xl font-bold text-gray-800 mb-6">Các bước thực hiện</h4>
-                          
-                          <div class="flex items-start gap-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full text-lg font-bold flex-shrink-0">
-                              1
-                            </div>
-                            <div class="pt-2">
-                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Tìm tài liệu</h5>
-                              <p class="text-gray-600 leading-relaxed">Sử dụng sidebar bên trái để xem danh sách tất cả tài liệu cùng với trạng thái hoàn thành</p>
-                            </div>
-                          </div>
-                          
-                          <div class="flex items-start gap-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full text-lg font-bold flex-shrink-0">
-                              2
-                            </div>
-                            <div class="pt-2">
-                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Mở viewer</h5>
-                              <p class="text-gray-600 leading-relaxed">Click "Xem tài liệu" để mở viewer toàn màn hình với các tính năng tương tác</p>
-                            </div>
-                          </div>
-                          
-                          <div class="flex items-start gap-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-red-500 text-white rounded-full text-lg font-bold flex-shrink-0">
-                              3
-                            </div>
-                            <div class="pt-2">
-                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Theo dõi tiến độ</h5>
-                              <p class="text-gray-600 leading-relaxed">Đánh dấu hoàn thành từng tài liệu và xem tiến độ cập nhật theo thời gian thực</p>
-                            </div>
-                          </div>
-                          
-                          <div class="flex items-start gap-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-purple-500 text-white rounded-full text-lg font-bold flex-shrink-0">
-                              4
-                            </div>
-                            <div class="pt-2">
-                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Hoàn thành khóa học</h5>
-                              <p class="text-gray-600 leading-relaxed">Sau khi hoàn thành tất cả tài liệu, nhấn nút "Hoàn thành khóa học" để kết thúc</p>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <!-- Quick Tips -->
-                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                          <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                            <mat-icon class="text-blue-600">lightbulb</mat-icon>
-                            Mẹo học tập hiệu quả
-                          </h4>
-                          <div class="space-y-4">
-                            <div class="flex items-start gap-3">
-                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <p class="text-gray-700 leading-relaxed">Học theo thứ tự từ trang 1 để đảm bảo kiến thức liền mạch và dễ hiểu</p>
-                            </div>
-                            <div class="flex items-start gap-3">
-                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <p class="text-gray-700 leading-relaxed">Tận dụng các tính năng navigation để chuyển nhanh giữa các trang</p>
-                            </div>
-                            <div class="flex items-start gap-3">
-                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <p class="text-gray-700 leading-relaxed">Kiểm tra tiến độ thường xuyên qua thanh progress bar</p>
-                            </div>
-                            <div class="flex items-start gap-3">
-                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <p class="text-gray-700 leading-relaxed">Ôn tập lại các tài liệu đã hoàn thành để củng cố kiến thức</p>
-                            </div>
-                          </div>
-                          
-                          <!-- Contact Support -->
-                          <div class="mt-6 pt-6 border-t border-blue-200">
-                            <div class="flex items-center gap-2 text-blue-600 mb-2">
-                              <mat-icon class="text-lg">support_agent</mat-icon>
-                              <span class="font-semibold">Cần hỗ trợ?</span>
-                            </div>
-                            <p class="text-sm text-gray-600">Liên hệ với chúng tôi nếu bạn gặp khó khăn trong quá trình học tập</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                </div>
-              </div>
-            </div>
 
-                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 min-h-screen" *ngIf="!showLectureViewer">
+                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 min-h-screen" *ngIf="!showLectureViewer">
         
         <!-- Documents Sidebar (Left Column) -->
         <div class="lg:col-span-1 bg-gray-50 border-r border-gray-200 flex flex-col shadow-lg">
@@ -1091,6 +887,210 @@
         </div>
       </div>
     </div>
+                  
+                  <!-- Learning Control Section -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon>play_lesson</mat-icon>
+                        </div>
+                        <h3 class="text-2xl font-bold">Điều khiển học tập</h3>
+                      </div>
+                    </div>
+                    
+                    <div class="p-8 space-y-6">
+                      <!-- Current Status Display -->
+                      <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-blue-100">
+                        <div class="flex items-center gap-6">
+                          <div class="p-4 rounded-xl" [class]="'bg-' + getCourseStatusColor() + '-500'">
+                            <mat-icon class="text-white">{{ getStatusIcon(traineeLectureDetail.statusLearn) }}</mat-icon>
+                          </div>
+                          <div class="flex-1">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">{{ getCourseStatus() }}</h4>
+                            <p class="text-gray-600 leading-relaxed">{{ getStatusDescription(traineeLectureDetail.statusLearn) }}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Current Page Info -->
+                      <div class="space-y-4" *ngIf="isLearningStarted">
+                        <div class="bg-white border-2 border-blue-200 rounded-xl p-6" *ngIf="getCurrentPageInfo().page; else completedMessage">
+                          <div class="flex items-center gap-4">
+                            <div class="p-3 rounded-xl" [style.background-color]="getTypeColor(getCurrentPageInfo().page!.typeLecturePage) + '20'">
+                              <mat-icon class="text-2xl" [style.color]="getTypeColor(getCurrentPageInfo().page!.typeLecturePage)">
+                                {{ getLecturePageTypeIcon(getCurrentPageInfo().page!.typeLecturePage) }}
+                              </mat-icon>
+                            </div>
+                            <div class="flex-1">
+                              <h4 class="text-lg font-semibold text-gray-800 mb-1">Tài liệu hiện tại</h4>
+                              <h5 class="text-xl font-bold text-gray-900 mb-2">{{ getCurrentPageInfo().page?.tittle }}</h5>
+                              <p class="text-sm text-gray-600">
+                                {{ getLecturePageTypeDisplayText(getCurrentPageInfo().page!.typeLecturePage) }} • 
+                                Trang {{ getCurrentPageInfo().current }}/{{ getCurrentPageInfo().total }}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <ng-template #completedMessage>
+                          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 text-center">
+                            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-500 rounded-full mb-4">
+                              <mat-icon class="text-white text-4xl">celebration</mat-icon>
+                            </div>
+                            <h4 class="text-2xl font-bold text-green-800 mb-2">Hoàn thành xuất sắc!</h4>
+                            <p class="text-green-700 text-lg">Bạn đã hoàn thành {{ getCompletedPagesCount() }}/{{ getTotalPagesCount() }} tài liệu.</p>
+                          </div>
+                        </ng-template>
+                      </div>
+                      
+                      <!-- Action Buttons -->
+                      <div class="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
+                        <button mat-raised-button 
+                                color="primary"
+                                class="px-8 py-3 text-lg font-semibold"
+                                *ngIf="!isLearningStarted && canStartLearning()"
+                                (click)="startLearning()">
+                          <mat-icon class="mr-3">play_arrow</mat-icon>
+                          Bắt đầu học ngay
+                        </button>
+                        
+                        
+                        <button mat-stroked-button 
+                                color="primary"
+                                class="px-6 py-3"
+                                *ngIf="getCompletedPagesCount() > 0">
+                          <mat-icon class="mr-2">replay</mat-icon>
+                          Ôn tập lại
+                        </button>
+                        
+                        <!-- Complete Course Button -->
+                        <button mat-raised-button 
+                                color="warn"
+                                class="px-12 py-4 text-xl font-bold"
+                                *ngIf="areAllPagesCompleted() && !isCourseCompleted()"
+                                (click)="finishCourse()">
+                          <mat-icon class="mr-3 text-2xl">emoji_events</mat-icon>
+                          Hoàn thành khóa học
+                        </button>
+                      </div>
+                      
+                      <!-- Course Completed Message -->
+                      <div class="text-center" *ngIf="isCourseCompleted()">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-8">
+                          <div class="inline-flex items-center justify-center w-24 h-24 bg-green-500 rounded-full mb-6">
+                            <mat-icon class="text-white">celebration</mat-icon>
+                          </div>
+                          <h3 class="text-3xl font-bold text-green-800 mb-3">Chúc mừng!</h3>
+                          <p class="text-green-700 text-xl mb-4">Bạn đã hoàn thành khóa học này thành công!</p>
+                          <div class="inline-flex items-center gap-2 text-green-600 font-medium" *ngIf="traineeLectureDetail.timeCompletedLearn">
+                            <mat-icon class="text-lg">event</mat-icon>
+                            <span>Hoàn thành vào: {{ traineeLectureDetail.timeCompletedLearn | date:'dd/MM/yyyy HH:mm' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- User Guide Section -->
+                  <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+                      <div class="flex items-center gap-3 text-white">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                          <mat-icon class="text-2xl">help_outline</mat-icon>
+                        </div>
+                        <h3 class="text-2xl font-bold">Hướng dẫn sử dụng</h3>
+                      </div>
+                    </div>
+                    
+                    <div class="p-8">
+                      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Guide Steps -->
+                        <div class="space-y-6">
+                          <h4 class="text-xl font-bold text-gray-800 mb-6">Các bước thực hiện</h4>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              1
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Tìm tài liệu</h5>
+                              <p class="text-gray-600 leading-relaxed">Sử dụng sidebar bên trái để xem danh sách tất cả tài liệu cùng với trạng thái hoàn thành</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              2
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Mở viewer</h5>
+                              <p class="text-gray-600 leading-relaxed">Click "Xem tài liệu" để mở viewer toàn màn hình với các tính năng tương tác</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-red-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              3
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Theo dõi tiến độ</h5>
+                              <p class="text-gray-600 leading-relaxed">Đánh dấu hoàn thành từng tài liệu và xem tiến độ cập nhật theo thời gian thực</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex items-start gap-4">
+                            <div class="flex items-center justify-center w-12 h-12 bg-purple-500 text-white rounded-full text-lg font-bold flex-shrink-0">
+                              4
+                            </div>
+                            <div class="pt-2">
+                              <h5 class="text-lg font-semibold text-gray-800 mb-2">Hoàn thành khóa học</h5>
+                              <p class="text-gray-600 leading-relaxed">Sau khi hoàn thành tất cả tài liệu, nhấn nút "Hoàn thành khóa học" để kết thúc</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Quick Tips -->
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                          <h4 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                            <mat-icon class="text-blue-600">lightbulb</mat-icon>
+                            Mẹo học tập hiệu quả
+                          </h4>
+                          <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Học theo thứ tự từ trang 1 để đảm bảo kiến thức liền mạch và dễ hiểu</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Tận dụng các tính năng navigation để chuyển nhanh giữa các trang</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Kiểm tra tiến độ thường xuyên qua thanh progress bar</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <p class="text-gray-700 leading-relaxed">Ôn tập lại các tài liệu đã hoàn thành để củng cố kiến thức</p>
+                            </div>
+                          </div>
+                          
+                          <!-- Contact Support -->
+                          <div class="mt-6 pt-6 border-t border-blue-200">
+                            <div class="flex items-center gap-2 text-blue-600 mb-2">
+                              <mat-icon class="text-lg">support_agent</mat-icon>
+                              <span class="font-semibold">Cần hỗ trợ?</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Liên hệ với chúng tôi nếu bạn gặp khó khăn trong quá trình học tập</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
   </mat-tab>
 </mat-tab-group>
 </div> 

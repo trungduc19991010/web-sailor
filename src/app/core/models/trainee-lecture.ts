@@ -1,5 +1,6 @@
 // Enum cho trạng thái học
 export enum StatusLearn {
+  All = -1, // Tất cả trạng thái
   Created = 0,
   InProgressLearn = 1,
   CompletedLearn = 2,
@@ -41,6 +42,7 @@ export interface TraineeLectureResponse {
 // Helper function để chuyển đổi status text
 export function getStatusLearnDisplayText(status: StatusLearn): string {
   const statusMap = {
+    [StatusLearn.All]: 'Tất cả trạng thái',
     [StatusLearn.Created]: 'Đã tạo',
     [StatusLearn.InProgressLearn]: 'Đang học',
     [StatusLearn.CompletedLearn]: 'Hoàn thành học',
@@ -53,6 +55,7 @@ export function getStatusLearnDisplayText(status: StatusLearn): string {
 // Helper function để lấy màu cho status
 export function getStatusLearnColor(status: StatusLearn): string {
   const colorMap = {
+    [StatusLearn.All]: '#757575', // Medium Grey
     [StatusLearn.Created]: '#9e9e9e', // Grey
     [StatusLearn.InProgressLearn]: '#2196f3', // Blue
     [StatusLearn.CompletedLearn]: '#4caf50', // Green
