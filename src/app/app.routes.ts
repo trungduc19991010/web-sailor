@@ -28,6 +28,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/courses/course-detail/course-detail.component').then(m => m.CourseDetailComponent)
   },
 
+  // Route cho exam component
+  {
+    path: 'exam',
+    loadComponent: () => import('./features/courses/exam/exam.component').then(m => m.ExamComponent)
+  },
+
   // Route cho introduction component
   {
     path: 'introduction',

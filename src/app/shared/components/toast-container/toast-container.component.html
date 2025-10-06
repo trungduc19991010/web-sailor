@@ -1,0 +1,29 @@
+<div class="fixed top-4 right-4 flex flex-col gap-3 max-w-md w-full pointer-events-none" style="z-index: 999999;">
+  <div 
+    *ngFor="let toast of toasts"
+    [@toastAnimation]
+    [ngClass]="getToastClasses(toast.type)"
+    class="pointer-events-auto min-w-[320px] max-w-full"
+  >
+    <!-- Icon -->
+    <div class="flex-shrink-0">
+      <mat-icon [ngClass]="getIconClasses(toast.type)" class="text-2xl">
+        {{ getIcon(toast.type) }}
+      </mat-icon>
+    </div>
+    
+    <!-- Message -->
+    <div class="flex-1 pt-0.5">
+      <p class="text-sm font-medium leading-relaxed">{{ toast.message }}</p>
+    </div>
+    
+    <!-- Close button -->
+    <button 
+      (click)="close(toast.id)"
+      class="flex-shrink-0 p-1 rounded-md hover:bg-black/5 transition-colors"
+      type="button"
+    >
+      <mat-icon class="text-base opacity-50 hover:opacity-100">close</mat-icon>
+    </button>
+  </div>
+</div>

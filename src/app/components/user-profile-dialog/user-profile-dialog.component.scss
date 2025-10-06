@@ -1,0 +1,31 @@
+// Success and error snackbar styles
+::ng-deep {
+  .success-snackbar {
+    background-color: #4caf50 !important;
+    color: white !important;
+
+    .mat-simple-snackbar-action {
+      color: white !important;
+    }
+  }
+
+  .error-snackbar {
+    background-color: #f44336 !important;
+    color: white !important;
+
+    .mat-simple-snackbar-action {
+      color: white !important;
+    }
+  }
+}
+
+// Dialog customization
+:host {
+  display: block;
+  
+  // Override Material Dialog styles if needed
+  ::ng-deep .mat-mdc-dialog-container {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}

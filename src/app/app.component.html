@@ -27,11 +27,11 @@
             </button>
 
             <mat-menu #userMenu="matMenu">
-              <button mat-menu-item>
+              <button mat-menu-item (click)="openUserProfileDialog()">
                 <mat-icon>person</mat-icon>
                 <span>Thông tin cá nhân</span>
               </button>
-              <button mat-menu-item>
+              <button mat-menu-item routerLink="/courses">
                 <mat-icon>school</mat-icon>
                 <span>Khóa học của tôi</span>
               </button>
@@ -129,6 +129,9 @@
   <router-outlet />
 </main>
 
+<!-- Toast Notifications -->
+<app-toast-container></app-toast-container>
+
 <!-- Mobile Bottom Navigation -->
 <nav class="mobile-bottom-nav" [class.visible]="isMobile">
   <div class="nav-tabs">
@@ -219,11 +222,11 @@
           <span>{{ currentUser?.userInfo?.fullName || currentUser?.userName || 'Người dùng' }}</span>
         </div>
         <ul class="menu-list">
-          <li><a href="#" (click)="closeMobileMenu()">
+          <li><a href="#" (click)="openUserProfileDialog(); closeMobileMenu()">
             <mat-icon>person</mat-icon>
             <span>Thông tin cá nhân</span>
           </a></li>
-          <li><a href="#" (click)="closeMobileMenu()">
+          <li><a routerLink="/courses" (click)="closeMobileMenu()">
             <mat-icon>school</mat-icon>
             <span>Khóa học của tôi</span>
           </a></li>

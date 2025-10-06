@@ -20,6 +20,8 @@ export interface TraineeLecture {
   courseName: string;
   isRegistered: boolean;
   statusLearn: StatusLearn;
+  statusExam?: number; // 0=Created, 1=InProgress, 2=Completed
+  attemptNumber?: number; // Số lần thi (attemptNumber - 1 = số lần thi lại)
 }
 
 // Interface cho request parameters

@@ -16,6 +16,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription } from 'rxjs';
 
 import { LoginDialogComponent } from './components/login-dialog/login-dialog.component';
+import { UserProfileDialogComponent } from './components/user-profile-dialog/user-profile-dialog.component';
+import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { AuthenticationService } from './core/guards/authentication.service';
 import { UserToken } from './core/models/user-token';
 
@@ -37,7 +39,7 @@ import { UserToken } from './core/models/user-token';
     ReactiveFormsModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,
-    
+    ToastContainerComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -98,6 +100,16 @@ export class AppComponent implements OnInit, OnDestroy {
         // Authentication service sẽ tự động cập nhật state qua observable
         // Không cần manually set state ở đây
       }
+    });
+  }
+
+  openUserProfileDialog(): void {
+    this.dialog.open(UserProfileDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      autoFocus: true,
+      panelClass: 'user-profile-dialog-container'
     });
   }
 

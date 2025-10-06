@@ -1,0 +1,17 @@
+.exam-result-dialog {
+  // Responsive
+  @media (max-width: 640px) {
+    .grid-cols-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Override Material styles
+:host ::ng-deep {
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}

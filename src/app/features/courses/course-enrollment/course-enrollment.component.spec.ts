@@ -5,14 +5,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { CourseEnrollmentComponent, CourseEnrollmentData } from './course-enrollment.component';
-import { AuthService } from '../../../services/auth.service';
 import { CourseLevel, CourseStatus } from '../services/course.service';
 
 describe('CourseEnrollmentComponent', () => {
   let component: CourseEnrollmentComponent;
   let fixture: ComponentFixture<CourseEnrollmentComponent>;
   let mockDialogRef: any;
-  let mockAuthService: any;
   let mockSnackBar: any;
 
   const mockCourse = {
@@ -38,11 +36,6 @@ describe('CourseEnrollmentComponent', () => {
       close: jasmine.createSpy('close')
     };
 
-    mockAuthService = {
-      isLoggedIn$: jasmine.createSpy('isLoggedIn$'),
-      currentUser$: jasmine.createSpy('currentUser$')
-    };
-
     mockSnackBar = {
       open: jasmine.createSpy('open')
     };
@@ -56,7 +49,6 @@ describe('CourseEnrollmentComponent', () => {
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: mockData },
-        { provide: AuthService, useValue: mockAuthService },
         { provide: MatSnackBar, useValue: mockSnackBar }
       ]
     })

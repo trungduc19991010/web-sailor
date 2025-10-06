@@ -1,0 +1,24 @@
+.exam-confirm-dialog {
+  min-width: 500px;
+  max-width: 600px;
+
+  @media (max-width: 640px) {
+    min-width: 100%;
+  }
+}
+
+// Remove default dialog padding
+::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+// Button transitions
+button {
+  transition: all 0.3s ease;
+
+  &:hover:not([disabled]) {
+    transform: translateY(-2px);
+  }
+}

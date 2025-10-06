@@ -93,17 +93,7 @@ export class AuthenticationService {
         userToken.userName = username;
 
         // Save tokens to cookies so the interceptor can use them
-        this.cookieService.set('a-token', userToken.token, {
-          expires: new Date(userToken.tokenExpiration),
-          path: '/',
-          secure: false
-        });
-
-        this.cookieService.set('r-token', userToken.refreshToken, {
-          expires: new Date(userToken.tokenExpiration),
-          path: '/',
-          secure: false
-        });
+        this.saveTokens(userToken);
 
         // Step 2: Now call getUserInformation, the interceptor will find the token
         return this.getUserInformation().pipe(
@@ -117,25 +107,11 @@ export class AuthenticationService {
       }),
       map((userTokenWithInfo: UserToken) => {
         // Step 3: Set the final user object and finish the login process
-        this.currentUser = userTokenWithInfo;
-
         if (hasRemember && isPlatformBrowser(this.platformId)) {
-          localStorage.setItem('remember_user_name', this.currentUser.userName);
+          localStorage.setItem('remember_user_name', userTokenWithInfo.userName);
         }
 
-        let permissions = this.currentUser.permissions;
-        permissions = (Array.isArray(permissions)) ? permissions : [permissions];
-        this.permissions = permissions;
-
-        if (isPlatformBrowser(this.platformId)) {
-          sessionStorage.setItem('permissions', this.convertObjectToString(this.currentUser.permissions));
-          sessionStorage.setItem('companyId', this.currentUser.company?.id);
-        }
-        this.permissionsService.loadPermissions(permissions);
-
-        this.userSubject.next(this.currentUser);
-        this.startRefreshTokenTimer();
-
+        this.finalizeUserAuthentication(userTokenWithInfo);
         return this.currentUser;
       })
     );
@@ -145,37 +121,9 @@ export class AuthenticationService {
     otpCode: otp
   }, {withCredentials: true})
     .pipe(map((user: UserToken) => {
-
-      // sessionStorage.setItem('a-token', user.token);
-      this.cookieService.set('a-token', user.token, {
-        expires: new Date(user.tokenExpiration),
-        path: '/',
-        secure: false
-      });
-
-
-      this.cookieService.set('r-token', user.refreshToken, {
-        expires: new Date(user.tokenExpiration),
-        path: '/',
-        secure: false
-      });
-
-      //let permissions = this.jwtHelper?.decodeToken(user.token)['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-
-      let permissions = user.permissions;
-      permissions = (Array.isArray(permissions)) ? permissions : [permissions];
-      this.permissions = permissions;
-
-      // save to section
-      if (isPlatformBrowser(this.platformId)) {
-        sessionStorage.setItem('permissions', this.convertObjectToString(user.permissions));
-        sessionStorage.setItem('companyId', user.company?.id);
-      }
-      this.permissionsService.loadPermissions(permissions);
-
-
-      this.userSubject.next(user);
-      this.startRefreshTokenTimer();
+      // Save tokens and complete authentication
+      this.saveTokens(user);
+      this.finalizeUserAuthentication(user);
       return user;
     }));
 
@@ -192,43 +140,28 @@ export class AuthenticationService {
   }
 
   refreshToken() {
-    let cookie = '';
-    // if (location.protocol == 'http:')
-      cookie = this.cookieService.get('r-token');
+    const cookie = this.cookieService.get('r-token');
     return this.http.post<ResponseApi<UserToken>>(`${environment.services_domain}/Account/refresh-token`, {refreshToken: cookie}, {withCredentials: true})
       .pipe(
         switchMap((user: ResponseApi<UserToken>) => {
           this.currentUser = user?.data;
+          
+          // Clear old session data
           this.cookieService.deleteAll();
           if (isPlatformBrowser(this.platformId)) {
             sessionStorage.clear();
           }
-          this.cookieService.set('r-token', this.currentUser.refreshToken, {
-            expires: new Date(this.currentUser.tokenExpiration),
-            path: '/',
-            secure: false
-          });
-          // sessionStorage.setItem('a-token', this.currentUser.token);
-          this.cookieService.set('a-token', this.currentUser.token, {
-            expires: new Date(this.currentUser.tokenExpiration),
-            path: '/',
-            secure: false
-          });
-
+          
+          // Save new tokens
+          this.saveTokens(this.currentUser);
+          
+          // Restore company ID to session
           if (isPlatformBrowser(this.platformId)) {
             sessionStorage.setItem('companyId', this.currentUser.company?.id);
           }
-
-          //let permissions = this.jwtHelper?.decodeToken(user.token)['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-          let permissions = this.currentUser.permissions;
-          permissions = (Array.isArray(permissions)) ? permissions : [permissions];
-          this.permissions = permissions;
-
-          // save to section
-          if (isPlatformBrowser(this.platformId)) {
-            sessionStorage.setItem('permissions', this.convertObjectToString(this.currentUser.permissions));
-          }
-          this.permissionsService.loadPermissions(permissions);
+          
+          // Load permissions
+          this.loadPermissionsFromUser(this.currentUser);
 
           // Gọi getUserInformation để lấy thông tin user mới nhất
           return this.getUserInformation().pipe(
@@ -261,40 +194,29 @@ export class AuthenticationService {
     const cookie = this.cookieService.get('r-token');
     this.http.post<ResponseApi<UserToken>>(`${environment.services_domain}/Account/refresh-token`, {refreshToken: cookie}, {withCredentials: true}).subscribe({
       next: (user: ResponseApi<UserToken>) => {
+        // Clear old session data
         this.cookieService.deleteAll();
         if (isPlatformBrowser(this.platformId)) {
           sessionStorage.clear();
         }
+        
         if (user?.data == null) {
           this.logout();
           return;
         }
+        
         const userData = user.data;
-        this.cookieService.set('r-token', userData.refreshToken, {
-          expires: new Date(userData.tokenExpiration),
-          path: '/',
-          secure: false
-        });
-        // sessionStorage.setItem('a-token', userData.token);
-        this.cookieService.set('a-token', userData.token, {
-          expires: new Date(userData.tokenExpiration),
-          path: '/',
-          secure: false
-        });
+        
+        // Save new tokens
+        this.saveTokens(userData);
+        
+        // Restore company ID to session
         if (isPlatformBrowser(this.platformId)) {
           sessionStorage.setItem('companyId', userData.company?.id);
         }
-        //let permissions = this.jwtHelper?.decodeToken(user.token)['http://schemas.microsoft.com/ws/2008/06/identity/calls/role'];
-
-        let permissions = userData.permissions;
-        permissions = (Array.isArray(permissions)) ? permissions : [permissions];
-        this.permissions = permissions;
-
-        // save to section
-        if (isPlatformBrowser(this.platformId)) {
-          sessionStorage.setItem('permissions', this.convertObjectToString(userData.permissions));
-        }
-        this.permissionsService.loadPermissions(permissions);
+        
+        // Load permissions
+        this.loadPermissionsFromUser(userData);
 
         // Gọi getUserInformation để lấy thông tin user mới nhất
         this.getUserInformation().subscribe({
@@ -371,6 +293,46 @@ export class AuthenticationService {
     }));
   }
 
+
+  /**
+   * Save authentication tokens to cookies
+   */
+  private saveTokens(userToken: UserToken): void {
+    const cookieOptions = {
+      expires: new Date(userToken.tokenExpiration),
+      path: '/',
+      secure: false // TODO: Set to true in production with HTTPS
+    };
+
+    this.cookieService.set('a-token', userToken.token, cookieOptions);
+    this.cookieService.set('r-token', userToken.refreshToken, cookieOptions);
+  }
+
+  /**
+   * Load user permissions and save to session storage
+   */
+  private loadPermissionsFromUser(userToken: UserToken): void {
+    let permissions = userToken.permissions;
+    permissions = Array.isArray(permissions) ? permissions : [permissions];
+    this.permissions = permissions;
+
+    if (isPlatformBrowser(this.platformId)) {
+      sessionStorage.setItem('permissions', this.convertObjectToString(userToken.permissions));
+      sessionStorage.setItem('companyId', userToken.company?.id);
+    }
+
+    this.permissionsService.loadPermissions(permissions);
+  }
+
+  /**
+   * Complete user setup after successful authentication
+   */
+  private finalizeUserAuthentication(userToken: UserToken): void {
+    this.currentUser = userToken;
+    this.loadPermissionsFromUser(userToken);
+    this.userSubject.next(this.currentUser);
+    this.startRefreshTokenTimer();
+  }
 
   private startRefreshTokenTimer() {
     // parse json object from base64 encoded jwt token

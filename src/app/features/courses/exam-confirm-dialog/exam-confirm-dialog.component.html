@@ -1,0 +1,122 @@
+<div class="exam-confirm-dialog">
+  <!-- Header -->
+  <div class="dialog-header bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-t-lg">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+        <mat-icon class="text-3xl">{{ data.isRetake ? 'refresh' : 'quiz' }}</mat-icon>
+      </div>
+      <div>
+        <h2 class="text-2xl font-bold">{{ data.isRetake ? 'Xác nhận thi lại' : 'Xác nhận bắt đầu thi' }}</h2>
+        <p class="text-blue-100 text-sm mt-1">{{ data.courseName }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div mat-dialog-content class="p-6">
+    <div class="space-y-4">
+      <!-- Retake Info (if applicable) -->
+      <div *ngIf="data.isRetake && data.attemptNumber" class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded">
+        <div class="flex items-start gap-3">
+          <mat-icon class="text-orange-500 mt-0.5">history</mat-icon>
+          <div class="flex-1">
+            <h3 class="font-semibold text-orange-900 mb-1">Thông tin thi lại</h3>
+            <div class="text-sm text-orange-800 space-y-1">
+              <p>• Bạn đã thi <strong>{{ data.attemptNumber }}</strong> lần</p>
+              <p *ngIf="data.lastScore !== undefined">• Điểm lần gần nhất: <strong>{{ data.lastScore }}%</strong></p>
+              <p>• Đây là lần thi thứ <strong>{{ data.attemptNumber + 1 }}</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Warning Alert -->
+      <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded">
+        <div class="flex items-start gap-3">
+          <mat-icon class="text-amber-500 mt-0.5">info</mat-icon>
+          <div>
+            <h3 class="font-semibold text-amber-900 mb-1">Lưu ý quan trọng</h3>
+            <ul class="text-sm text-amber-800 space-y-1">
+              <li>• Sau khi bắt đầu, bạn không thể tạm dừng bài thi</li>
+              <li>• Hãy đảm bảo kết nối internet ổn định</li>
+              <li>• Hết giờ sẽ tự động nộp bài</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Time -->
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <mat-icon class="text-white">schedule</mat-icon>
+            </div>
+            <div>
+              <p class="text-xs text-gray-600">Thời gian làm bài</p>
+              <p class="text-xl font-bold text-blue-600">{{ formattedTime }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Number of Questions -->
+        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <mat-icon class="text-white">quiz</mat-icon>
+            </div>
+            <div>
+              <p class="text-xs text-gray-600">Số câu hỏi</p>
+              <p class="text-xl font-bold text-purple-600">{{ data.numberQuestions }} câu</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pass Percentage -->
+        <div class="bg-green-50 p-4 rounded-lg border border-green-200 md:col-span-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+              <mat-icon class="text-white">check_circle</mat-icon>
+            </div>
+            <div>
+              <p class="text-xs text-gray-600">Điểm tối thiểu để đạt</p>
+              <p class="text-xl font-bold text-green-600">{{ data.minimumPercentageToComplete }}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ready Check -->
+      <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div class="flex items-start gap-3">
+          <mat-icon class="text-gray-500 mt-0.5">help_outline</mat-icon>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-800 mb-2">Bạn đã sẵn sàng chưa?</p>
+            <p class="text-sm text-gray-600">
+              Hãy chắc chắn rằng bạn đã hiểu rõ các quy định và sẵn sàng để bắt đầu làm bài thi.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div mat-dialog-actions class="p-6 pt-0 flex gap-3 justify-end">
+    <button 
+      mat-stroked-button
+      class="!border-gray-300 !text-gray-700 hover:!bg-gray-50 !px-6 !py-2"
+      (click)="onCancel()">
+      <mat-icon class="mr-2">close</mat-icon>
+      Hủy bỏ
+    </button>
+    <button 
+      mat-raised-button
+      class="!bg-gradient-to-r !from-blue-500 !to-indigo-600 !text-white hover:!from-blue-600 hover:!to-indigo-700 !px-8 !py-2 !shadow-lg hover:!shadow-xl"
+      (click)="onConfirm()">
+      <mat-icon class="mr-2">{{ data.isRetake ? 'refresh' : 'play_arrow' }}</mat-icon>
+      {{ data.isRetake ? 'Thi lại' : 'Bắt đầu thi' }}
+    </button>
+  </div>
+</div>

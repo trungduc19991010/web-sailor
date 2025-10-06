@@ -1,0 +1,218 @@
+<!-- Loading State -->
+<div *ngIf="loading" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div class="text-center">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p class="mt-4 text-lg text-gray-700 font-medium">Đang tải bài thi...</p>
+  </div>
+</div>
+
+<!-- Exam Container -->
+<div *ngIf="!loading && examData" class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+  <div class="container mx-auto px-4 py-6 max-w-7xl">
+    
+    <!-- Header with Timer -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 sticky top-4 z-10 backdrop-blur-sm bg-white/95">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Title -->
+        <div class="flex-1">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Bài Kiểm Tra</h1>
+          <p class="text-sm text-gray-600">
+            <span class="inline-flex items-center">
+              <mat-icon class="mr-1 text-sm">description</mat-icon>
+              Tổng số câu hỏi: <span class="font-semibold ml-1">{{ examData.numberQuestions }}</span>
+            </span>
+            <span class="mx-3">•</span>
+            <span class="inline-flex items-center">
+              <mat-icon class="mr-1 text-sm">check_circle</mat-icon>
+              Đã trả lời: <span class="font-semibold ml-1 text-green-600">{{ answeredQuestionsCount }}</span>
+            </span>
+          </p>
+        </div>
+        
+        <!-- Timer -->
+        <div class="flex flex-col items-end">
+          <div class="flex items-center gap-3">
+            <mat-icon [class]="timeRemaining < 60 ? 'text-red-500 animate-pulse' : 'text-blue-600'">schedule</mat-icon>
+            <span [class]="timeRemaining < 60 ? 'text-3xl font-mono font-bold text-red-500' : 'text-3xl font-mono font-bold text-blue-600'">
+              {{ formattedTime }}
+            </span>
+          </div>
+          <!-- Progress bar -->
+          <div class="w-48 h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
+            <div 
+              class="h-full transition-all duration-1000 rounded-full"
+              [class]="timeRemaining < 60 ? 'bg-red-500' : 'bg-blue-500'"
+              [style.width.%]="timeProgressPercentage">
+            </div>
+          </div>
+          <span class="text-xs text-gray-500 mt-1">Thời gian còn lại</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      
+      <!-- Main Content - Questions -->
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          
+          <!-- Question Card -->
+          <div *ngIf="currentQuestion" class="p-8">
+            
+            <!-- Question Header -->
+            <div class="flex items-start gap-4 mb-6">
+              <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+                {{ currentQuestion.number }}
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                    {{ currentQuestion.correctAnswerType === CorrectAnswerType.SINGLE_CHOICE ? 'Chọn 1 đáp án' : 'Chọn nhiều đáp án' }}
+                  </span>
+                  <span *ngIf="isQuestionAnswered(currentQuestion.id)" class="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                    <mat-icon class="text-sm">check</mat-icon>
+                    Đã trả lời
+                  </span>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-800 leading-relaxed">
+                  {{ currentQuestion.question }}
+                </h2>
+              </div>
+            </div>
+
+            <!-- Answer Options -->
+            <div class="space-y-3">
+              <div 
+                *ngFor="let answer of currentQuestion.answers; let idx = index"
+                class="group cursor-pointer transition-all duration-200"
+                (click)="currentQuestion.correctAnswerType === CorrectAnswerType.SINGLE_CHOICE ? selectSingleAnswer(currentQuestion.id, answer.id) : toggleMultipleAnswer(currentQuestion.id, answer.id)">
+                
+                <div 
+                  class="flex items-start gap-4 p-5 rounded-xl border-2 transition-all duration-200"
+                  [class]="isAnswerSelected(currentQuestion.id, answer.id) 
+                    ? 'bg-blue-50 border-blue-500 shadow-md' 
+                    : 'bg-gray-50 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'">
+                  
+                  <!-- Answer Label -->
+                  <div 
+                    class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-200"
+                    [class]="isAnswerSelected(currentQuestion.id, answer.id) 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-300 text-gray-700 group-hover:bg-blue-300'">
+                    {{ String.fromCharCode(65 + idx) }}
+                  </div>
+                  
+                  <!-- Answer Text -->
+                  <div class="flex-1">
+                    <p class="text-gray-800 leading-relaxed font-medium">
+                      {{ answer.answer }}
+                    </p>
+                  </div>
+                  
+                  <!-- Selection Indicator -->
+                  <div class="flex-shrink-0">
+                    <mat-icon 
+                      *ngIf="currentQuestion.correctAnswerType === CorrectAnswerType.SINGLE_CHOICE"
+                      [class]="isAnswerSelected(currentQuestion.id, answer.id) ? 'text-blue-500' : 'text-gray-300'">
+                      {{ isAnswerSelected(currentQuestion.id, answer.id) ? 'radio_button_checked' : 'radio_button_unchecked' }}
+                    </mat-icon>
+                    <mat-icon 
+                      *ngIf="currentQuestion.correctAnswerType === CorrectAnswerType.MULTIPLE_CHOICE"
+                      [class]="isAnswerSelected(currentQuestion.id, answer.id) ? 'text-blue-500' : 'text-gray-300'">
+                      {{ isAnswerSelected(currentQuestion.id, answer.id) ? 'check_box' : 'check_box_outline_blank' }}
+                    </mat-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+              <button 
+                mat-raised-button
+                class="!bg-gray-100 !text-gray-700 hover:!bg-gray-200"
+                [disabled]="currentQuestionIndex === 0"
+                (click)="previousQuestion()">
+                <mat-icon>arrow_back</mat-icon>
+                <span class="ml-2">Câu trước</span>
+              </button>
+
+              <span class="text-sm text-gray-600 font-medium">
+                Câu {{ currentQuestionIndex + 1 }} / {{ examData.questions.length }}
+              </span>
+
+              <button 
+                mat-raised-button
+                class="!bg-gradient-to-r !from-blue-500 !to-indigo-600 !text-white hover:!from-blue-600 hover:!to-indigo-700"
+                [disabled]="currentQuestionIndex === examData.questions.length - 1"
+                (click)="nextQuestion()">
+                <span class="mr-2">Câu sau</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar - Question Navigator -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-[200px]">
+          <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <mat-icon class="text-blue-600">grid_view</mat-icon>
+            Danh sách câu hỏi
+          </h3>
+          
+          <!-- Question Grid -->
+          <div class="grid grid-cols-5 gap-2 mb-6">
+            <button
+              *ngFor="let question of examData.questions; let i = index"
+              class="aspect-square rounded-lg font-semibold text-sm transition-all duration-200 shadow-sm hover:shadow-md"
+              [class]="i === currentQuestionIndex 
+                ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white scale-110' 
+                : isQuestionAnswered(question.id)
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+              (click)="goToQuestion(i)">
+              {{ i + 1 }}
+            </button>
+          </div>
+
+          <!-- Legend -->
+          <div class="space-y-2 text-xs text-gray-600 mb-6 pb-6 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded"></div>
+              <span>Câu hiện tại</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-green-500 rounded"></div>
+              <span>Đã trả lời</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 bg-gray-200 rounded"></div>
+              <span>Chưa trả lời</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            mat-raised-button
+            class="w-full !bg-gradient-to-r !from-green-500 !to-emerald-600 !text-white hover:!from-green-600 hover:!to-emerald-700 !py-4 !text-base !font-bold !shadow-lg hover:!shadow-xl !transition-all"
+            [disabled]="isSubmitting"
+            (click)="submitExam()">
+            <mat-icon *ngIf="!isSubmitting">send</mat-icon>
+            <mat-spinner *ngIf="isSubmitting" diameter="20" class="inline-block mr-2"></mat-spinner>
+            <span>{{ isSubmitting ? 'Đang nộp bài...' : 'Nộp bài' }}</span>
+          </button>
+
+          <!-- Warning -->
+          <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p class="text-xs text-amber-800 flex items-start gap-2">
+              <mat-icon>warning</mat-icon>
+              <span>Hết giờ sẽ tự động nộp bài. Hãy kiểm tra kỹ trước khi nộp!</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

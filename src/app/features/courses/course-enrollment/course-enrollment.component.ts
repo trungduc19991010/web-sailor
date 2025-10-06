@@ -13,7 +13,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 // Import services và interfaces
 import { Course } from '../services/course.service';
-import { AuthService } from '../../../services/auth.service';
 
 export interface CourseEnrollmentData {
   course: Course;
@@ -58,7 +57,6 @@ export class CourseEnrollmentComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
     private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<CourseEnrollmentComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CourseEnrollmentData

@@ -128,24 +128,24 @@
                   </button>
                   
                   <!-- Đang thi -->
-                  <button 
+                  <!-- <button 
                     mat-button 
                     (click)="quickFilter('in-exam')"
                     [class]="selectedStatusLearn === 3 ? 'bg-orange-50 text-orange-700 border-orange-200' : 'text-gray-600 hover:bg-gray-50'"
                     class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
                     <mat-icon class="text-sm mr-1">quiz</mat-icon>
                     Đang thi
-                  </button>
+                  </button> -->
                   
                   <!-- Hoàn thành thi -->
-                  <button 
+                  <!-- <button 
                     mat-button 
                     (click)="quickFilter('completed-exam')"
                     [class]="selectedStatusLearn === 4 ? 'bg-purple-50 text-purple-700 border-purple-200' : 'text-gray-600 hover:bg-gray-50'"
                     class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
                     <mat-icon class="text-sm mr-1">workspace_premium</mat-icon>
                     Hoàn thành thi
-                  </button>
+                  </button> -->
                 </div>
               </div>
 
@@ -399,8 +399,8 @@
                       color="warn"
                       *ngIf="canStartExam(course)"
                       (click)="startExam(course)">
-                <mat-icon>quiz</mat-icon>
-                {{ course.statusLearn === 3 ? 'Tiếp tục thi' : 'Bắt đầu thi' }}
+                <mat-icon>{{ getExamButtonIcon(course) }}</mat-icon>
+                {{ getExamButtonText(course) }}
               </button>
               
               <button mat-raised-button

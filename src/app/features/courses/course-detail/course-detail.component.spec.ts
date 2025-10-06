@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 
 import { CourseDetailComponent } from './course-detail.component';
 import { CourseService } from '../services/course.service';
-import { AuthService } from '../../../services/auth.service';
+import { AuthenticationService } from '../../../core/guards/authentication.service';
 
 describe('CourseDetailComponent', () => {
   let component: CourseDetailComponent;
@@ -15,7 +15,7 @@ describe('CourseDetailComponent', () => {
   let mockActivatedRoute: any;
   let mockRouter: any;
   let mockCourseService: any;
-  let mockAuthService: any;
+  let mockAuthenticationService: any;
   let mockDialog: any;
   let mockSnackBar: any;
 
@@ -42,9 +42,10 @@ describe('CourseDetailComponent', () => {
       }))
     };
 
-    mockAuthService = {
-      isLoggedIn$: of(false),
-      currentUser$: of(null)
+    mockAuthenticationService = {
+      isAuthenticated: jasmine.createSpy('isAuthenticated').and.returnValue(false),
+      user: of(null),
+      userTokenValue: null
     };
 
     mockDialog = {
@@ -66,7 +67,7 @@ describe('CourseDetailComponent', () => {
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
         { provide: Router, useValue: mockRouter },
         { provide: CourseService, useValue: mockCourseService },
-        { provide: AuthService, useValue: mockAuthService },
+        { provide: AuthenticationService, useValue: mockAuthenticationService },
         { provide: MatDialog, useValue: mockDialog },
         { provide: MatSnackBar, useValue: mockSnackBar }
       ]
