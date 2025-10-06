@@ -10,6 +10,10 @@
   }
 }
 
+mat-icon {
+  overflow: visible !important;
+}
+
 // Custom scrollbar for question list
 ::-webkit-scrollbar {
   width: 8px;

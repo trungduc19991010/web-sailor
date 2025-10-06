@@ -9,9 +9,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { AuthenticationService } from '../../core/guards/authentication.service';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { first } from 'rxjs';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-login-dialog',
@@ -25,8 +25,7 @@ import { first } from 'rxjs';
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatProgressSpinnerModule
   ],
   templateUrl: './login-dialog.component.html',
   styleUrl: './login-dialog.component.scss'
@@ -41,8 +40,8 @@ export class LoginDialogComponent implements OnInit {
     private fb: FormBuilder,
     private authenticationService: AuthenticationService,
     private dialogRef: MatDialogRef<LoginDialogComponent>,
-    private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -66,7 +65,7 @@ export class LoginDialogComponent implements OnInit {
 
   onLogin(): void {
     if (this.loginForm.invalid) {
-      this.snackBar.open('Vui lòng nhập tên đăng nhập và mật khẩu', 'Đóng', { duration: 3000 });
+      this.toast.warning('Vui lòng nhập tên đăng nhập và mật khẩu');
       return;
     }
 
@@ -82,17 +81,14 @@ export class LoginDialogComponent implements OnInit {
       .subscribe({
         next: (user) => {
           this.isLoading = false;
-          this.snackBar.open('Đăng nhập thành công!', 'Đóng', { duration: 3000 });
+          this.toast.success('Đăng nhập thành công!');
           this.dialogRef.close({ success: true, user: user });
         },
         error: (error) => {
           this.isLoading = false;
           console.error(error);
           const message = error?.error?.description || 'Tên đăng nhập hoặc mật khẩu không chính xác';
-          this.snackBar.open(message, 'Đóng', {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          });
+          this.toast.error(message, 5000);
         }
       });
   }

@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ToastService } from '../../../core/services/toast.service';
 
 // Import services và interfaces
 import { Course } from '../services/course.service';
@@ -42,8 +42,7 @@ export interface EnrollmentFormData {
     MatIconModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatProgressSpinnerModule
   ],
   templateUrl: './course-enrollment.component.html',
   styleUrl: './course-enrollment.component.scss'
@@ -57,8 +56,8 @@ export class CourseEnrollmentComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<CourseEnrollmentComponent>,
+    private toast: ToastService,
     @Inject(MAT_DIALOG_DATA) public data: CourseEnrollmentData
   ) {
     this.course = data.course;
@@ -214,20 +213,14 @@ export class CourseEnrollmentComponent implements OnInit {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Đóng', {
-      duration: 3000,
-      panelClass: ['success-snackbar']
-    });
+    this.toast.success(message);
   }
 
   /**
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Đóng', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.toast.error(message, 5000);
   }
 
   /**

@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { ToastService } from '../../core/services/toast.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -21,8 +21,7 @@ import { GuideService, GuideDocument } from './services/guide.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatTabsModule,
-    MatSnackBarModule
+    MatTabsModule
   ],
   templateUrl: './guide.component.html',
   styleUrl: './guide.component.scss'
@@ -46,7 +45,7 @@ export class GuideComponent implements OnInit, OnDestroy {
   constructor(
     private guideService: GuideService,
     private sanitizer: DomSanitizer,
-    private snackBar: MatSnackBar
+    private toast: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -212,20 +211,14 @@ export class GuideComponent implements OnInit, OnDestroy {
    * Hiển thị thông báo lỗi
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Đóng', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.toast.error(message, 5000);
   }
 
   /**
    * Hiển thị thông báo thành công
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Đóng', {
-      duration: 3000,
-      panelClass: ['success-snackbar']
-    });
+    this.toast.success(message);
   }
 
   /**

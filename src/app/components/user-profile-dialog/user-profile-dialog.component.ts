@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ToastService } from '../../core/services/toast.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { UserService } from '../../core/services/user.service';
 import { AuthenticationService } from '../../core/guards/authentication.service';
@@ -18,7 +18,6 @@ import { AuthenticationService } from '../../core/guards/authentication.service'
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    MatSnackBarModule,
     MatProgressSpinnerModule
   ],
   templateUrl: './user-profile-dialog.component.html',
@@ -33,8 +32,8 @@ export class UserProfileDialogComponent implements OnInit {
     private fb: FormBuilder,
     private userService: UserService,
     private authService: AuthenticationService,
-    private snackBar: MatSnackBar,
-    private dialogRef: MatDialogRef<UserProfileDialogComponent>
+    private dialogRef: MatDialogRef<UserProfileDialogComponent>,
+    private toast: ToastService
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
@@ -65,11 +64,7 @@ export class UserProfileDialogComponent implements OnInit {
       },
       error: (error) => {
         console.error('Lỗi khi tải thông tin người dùng:', error);
-        this.snackBar.open('Không thể tải thông tin người dùng', 'Đóng', {
-          duration: 3000,
-          horizontalPosition: 'center',
-          verticalPosition: 'top'
-        });
+        this.toast.error('Không thể tải thông tin người dùng');
         this.isLoading = false;
       }
     });
@@ -86,12 +81,7 @@ export class UserProfileDialogComponent implements OnInit {
       this.userService.updateUserInfo(formData).subscribe({
         next: (response) => {
           if (response.result === 1) {
-            this.snackBar.open('Cập nhật thông tin thành công!', 'Đóng', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['success-snackbar']
-            });
+            this.toast.success('Cập nhật thông tin thành công!');
 
             // Refresh lại user info trong authentication service
             this.authService.getUserInformation().subscribe({
@@ -112,23 +102,13 @@ export class UserProfileDialogComponent implements OnInit {
               this.dialogRef.close({ success: true });
             }, 1500);
           } else {
-            this.snackBar.open(response.description || 'Có lỗi xảy ra khi cập nhật', 'Đóng', {
-              duration: 3000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
-            });
+            this.toast.error(response.description || 'Có lỗi xảy ra khi cập nhật');
           }
           this.isSubmitting = false;
         },
         error: (error) => {
           console.error('Lỗi khi cập nhật thông tin:', error);
-          this.snackBar.open('Không thể cập nhật thông tin', 'Đóng', {
-            duration: 3000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['error-snackbar']
-          });
+          this.toast.error('Không thể cập nhật thông tin');
           this.isSubmitting = false;
         }
       });

@@ -9,7 +9,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { ToastService } from '../../../core/services/toast.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
@@ -36,8 +36,7 @@ import { CourseEnrollmentComponent } from '../course-enrollment/course-enrollmen
     MatChipsModule,
     MatTabsModule,
     MatExpansionModule,
-    MatProgressBarModule,
-    MatSnackBarModule
+    MatProgressBarModule
   ],
   templateUrl: './course-detail.component.html',
   styleUrl: './course-detail.component.scss'
@@ -92,7 +91,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     private lectureDetailService: LectureDetailService,
     private authenticationService: AuthenticationService,
     private sanitizer: DomSanitizer,
-    private snackBar: MatSnackBar,
+    private toast: ToastService,
     private dialog: MatDialog
   ) { }
 
@@ -399,10 +398,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    * Show error message
    */
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Đóng', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.toast.error(message, 5000);
   }
 
 
@@ -1200,10 +1196,7 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Đóng', {
-      duration: 3000,
-      panelClass: ['success-snackbar']
-    });
+    this.toast.success(message);
   }
 
 

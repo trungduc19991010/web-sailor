@@ -12,7 +12,6 @@ import {UserInfo} from '../models/user-info';
 import {NgxPermissionsService} from 'ngx-permissions';
 import {CurrencyPipe, DatePipe, isPlatformBrowser} from '@angular/common';
 import {MatDialog} from '@angular/material/dialog';
-import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
@@ -35,7 +34,6 @@ export class AuthenticationService {
     private http: HttpClient,
     public currencyPipe: CurrencyPipe,
     public datePipe: DatePipe,
-    public snackBar: MatSnackBar,
     public dialog: MatDialog,
     public cookieService: CookieService,
     @Inject(PLATFORM_ID) private platformId: Object

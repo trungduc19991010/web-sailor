@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { LoginDialogComponent } from './components/login-dialog/login-dialog.component';
 import { UserProfileDialogComponent } from './components/user-profile-dialog/user-profile-dialog.component';
@@ -46,9 +47,11 @@ import { UserToken } from './core/models/user-token';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'VOSCO EDU - Sailor Web App';
-  isLoggedIn = false;
   currentUser: UserToken | null = null;
   private subscriptions = new Subscription();
+  
+  // Observable for template - khởi tạo trong constructor
+  isLoggedIn$!: Observable<boolean>;
 
   // Mobile menu state
   mobileMenuOpen = false;
@@ -57,29 +60,49 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private dialog: MatDialog,
     public authenticationService: AuthenticationService,
-    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    // Khởi tạo isLoggedIn$ observable sau khi authenticationService đã được inject
+    this.isLoggedIn$ = this.authenticationService.user.pipe(
+      map(user => {
+        // Kiểm tra token có tồn tại và không rỗng
+        if (!user || !user.token || user.token.trim() === '') {
+          return false;
+        }
+        // Kiểm tra token chưa hết hạn
+        try {
+          return !this.authenticationService.jwtHelper.isTokenExpired(user.token);
+        } catch (error) {
+          console.error('Error checking token expiration:', error);
+          return false;
+        }
+      })
+    );
+  }
 
   ngOnInit(): void {
-    // Khởi tạo trạng thái đăng nhập ban đầu
-    this.updateAuthState();
-
-    // Subscribe to authentication state
+    // Subscribe để cập nhật currentUser cho hiển thị tên
     this.subscriptions.add(
       this.authenticationService.user.subscribe(user => {
-        this.updateAuthState();
+        this.currentUser = user;
+        console.log('User updated:', {
+          hasUser: !!user,
+          hasToken: !!user?.token,
+          token: user?.token?.substring(0, 20) + '...',
+          userName: user?.userName
+        });
+      })
+    );
+
+    // Debug isLoggedIn$ observable
+    this.subscriptions.add(
+      this.isLoggedIn$.subscribe(isLoggedIn => {
+        console.log('isLoggedIn$ emitted:', isLoggedIn);
       })
     );
 
     // Check if mobile on init
     this.checkIfMobile();
-  }
-
-  private updateAuthState(): void {
-    this.isLoggedIn = this.authenticationService.isAuthenticated();
-    this.currentUser = this.authenticationService.userTokenValue;
-    this.cdr.markForCheck();
   }
 
   ngOnDestroy(): void {

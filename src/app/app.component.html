@@ -11,15 +11,9 @@
           </div>
         </div>
         <div class="auth-section">
-          <!-- Hiển thị khi chưa đăng nhập -->
-          <ng-container *ngIf="!isLoggedIn">
-            <button mat-raised-button color="primary" (click)="openLoginDialog()">
-              Đăng nhập
-            </button>
-          </ng-container>
-
-          <!-- Hiển thị khi đã đăng nhập -->
-          <ng-container *ngIf="isLoggedIn">
+          
+          <!-- Hiển thị theo trạng thái đăng nhập (mutual exclusive) -->
+          <ng-container *ngIf="isLoggedIn$ | async; else showLogin">
             <button mat-button [matMenuTriggerFor]="userMenu" class="user-menu-trigger">
               <mat-icon>account_circle</mat-icon>
               <span>{{ currentUser?.userInfo?.fullName || currentUser?.userName || 'Người dùng' }}</span>
@@ -46,6 +40,11 @@
               </button>
             </mat-menu>
           </ng-container>
+          <ng-template #showLogin>
+            <button mat-raised-button color="primary" (click)="openLoginDialog()">
+              Đăng nhập
+            </button>
+          </ng-template>
         </div>
       </div>
     </div>
@@ -91,7 +90,7 @@
         </li>
         <li><a routerLink="/guide" (click)="toggleMobileMenu()">Hướng dẫn</a></li>
         <li><a href="#" (click)="toggleMobileMenu()">Đối tác</a></li>
-        <li class="mobile-auth" *ngIf="!isLoggedIn">
+        <li class="mobile-auth" *ngIf="!(isLoggedIn$ | async)">
           <button mat-raised-button color="primary" (click)="openLoginDialog(); toggleMobileMenu()">
             Đăng nhập
           </button>
@@ -209,14 +208,14 @@
         </ul>
       </div>
 
-      <div class="menu-section" *ngIf="!isLoggedIn">
+      <div class="menu-section" *ngIf="!(isLoggedIn$ | async)">
         <button mat-raised-button color="primary" class="login-btn" (click)="openLoginDialog(); closeMobileMenu()">
           <mat-icon>login</mat-icon>
           Đăng nhập
         </button>
       </div>
 
-      <div class="menu-section" *ngIf="isLoggedIn">
+      <div class="menu-section" *ngIf="isLoggedIn$ | async">
         <div class="user-info">
           <mat-icon>account_circle</mat-icon>
           <span>{{ currentUser?.userInfo?.fullName || currentUser?.userName || 'Người dùng' }}</span>

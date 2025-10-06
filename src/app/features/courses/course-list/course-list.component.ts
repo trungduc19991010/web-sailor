@@ -69,8 +69,8 @@ export class CourseListComponent implements OnInit, OnDestroy {
     { value: StatusLearn.Created, label: 'Đã tạo' },
     { value: StatusLearn.InProgressLearn, label: 'Đang học' },
     { value: StatusLearn.CompletedLearn, label: 'Hoàn thành học' },
-    // { value: StatusLearn.InProgressExam, label: 'Đang thi' },
-    // { value: StatusLearn.CompletedExam, label: 'Hoàn thành thi' }
+    { value: StatusLearn.InProgressExam, label: 'Đang thi' },
+    { value: StatusLearn.CompletedExam, label: 'Hoàn thành thi' }
   ];
   
   // Pagination
@@ -560,10 +560,23 @@ export class CourseListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if can start exam
+   * Check if can start exam (bao gồm thi lại)
    */
   canStartExam(course: TraineeLecture): boolean {
+    // Cho phép bắt đầu/tiếp tục/thi lại khi:
+    // - Đã hoàn thành học (chuẩn bị thi)
+    // - Đang thi dở
+    // - Đã hoàn thành thi (cho phép thi lại)
     return course.statusLearn === StatusLearn.CompletedLearn || 
+           course.statusLearn === StatusLearn.InProgressExam ||
+           course.statusLearn === StatusLearn.CompletedExam;
+  }
+
+  /**
+   * Cho phép hiển thị nút "Học lại" chỉ khi chưa hoàn thành thi
+   */
+  canRelearn(course: TraineeLecture): boolean {
+    return course.statusLearn === StatusLearn.CompletedLearn ||
            course.statusLearn === StatusLearn.InProgressExam;
   }
 
