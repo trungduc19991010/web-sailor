@@ -1098,15 +1098,6 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     return this.traineeLectureDetail.statusLearn === 0 || this.traineeLectureDetail.statusLearn === 1;
   }
   
-  /**
-   * Start learning
-   */
-  startLearning(): void {
-    this.isLearningStarted = true;
-    if (this.traineeLectureDetail?.lecture?.lecturePages && this.traineeLectureDetail.lecture.lecturePages.length > 0) {
-      this.currentLearningPageId = this.traineeLectureDetail.lecture.lecturePages[0].id;
-    }
-  }
   
   /**
    * Finish current page
@@ -1130,21 +1121,27 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Get current page info
+   * Get current page info for learning progress
    */
-  getCurrentPageInfo(): { current: number, total: number, page?: LecturePage } {
-    if (!this.traineeLectureDetail?.lecture?.lecturePages) {
-      return { current: 0, total: 0 };
+  getCurrentPageInfo(): { page: LecturePage | null; current: number; total: number } {
+    if (!this.traineeLectureDetail?.lecture?.lecturePages || this.traineeLectureDetail.lecture.lecturePages.length === 0) {
+      return { page: null, current: 0, total: 0 };
     }
     
-    const pages = this.traineeLectureDetail.lecture.lecturePages;
-    const currentIndex = pages.findIndex(p => p.id === this.currentLearningPageId);
+    const pages = this.getSortedPages();
+    const totalPages = pages.length;
     
-    return {
-      current: currentIndex >= 0 ? currentIndex + 1 : this.completedPageIds.length,
-      total: pages.length,
-      page: currentIndex >= 0 ? pages[currentIndex] : undefined
-    };
+    // Tìm trang đầu tiên chưa hoàn thành
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      if (!this.isPageCompleted(page)) {
+        return { page, current: i + 1, total: totalPages };
+      }
+    }
+    
+    // Nếu tất cả đã hoàn thành, trả về trang cuối cùng
+    const lastPage = pages[pages.length - 1];
+    return { page: lastPage, current: totalPages, total: totalPages };
   }
   
   /**
@@ -1173,22 +1170,22 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    */
   getStatusBadgeClasses(): string {
     if (!this.traineeLectureDetail) {
-      return 'from-gray-500 to-gray-600 border-gray-400';
+      return 'from-gray-400 to-gray-500 border-gray-300';
     }
     
     switch (this.traineeLectureDetail.statusLearn) {
-      case 0: // NotStartedLearn
-        return 'from-gray-500 to-slate-600 border-gray-400';
-      case 1: // InProgressLearn
-        return 'from-blue-500 to-indigo-600 border-blue-400';
+      case 0: // NotStarted
+        return 'from-gray-400 to-gray-500 border-gray-300';
+      case 1: // InProgress
+        return 'from-blue-400 to-blue-600 border-blue-300';
       case 2: // CompletedLearn
-        return 'from-green-500 to-emerald-600 border-green-400';
-      case 3: // FailedLearn
-        return 'from-red-500 to-rose-600 border-red-400';
-      case 4: // CertifiedLearn
-        return 'from-purple-500 to-violet-600 border-purple-400';
+        return 'from-green-400 to-green-600 border-green-300';
+      case 3: // InProgressExam
+        return 'from-orange-400 to-orange-600 border-orange-300';
+      case 4: // CompletedExam
+        return 'from-purple-400 to-purple-600 border-purple-300';
       default:
-        return 'from-gray-500 to-gray-600 border-gray-400';
+        return 'from-gray-400 to-gray-500 border-gray-300';
     }
   }
 
@@ -1196,9 +1193,8 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    * Show success message
    */
   private showSuccessMessage(message: string): void {
-    this.toast.success(message);
+    this.toast.success(message, 3000);
   }
-
 
   /**
    * Open lecture page content (legacy method - redirects to viewLecturePage)
@@ -1206,24 +1202,6 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
   openLecturePage(page: LecturePage): void {
     // Redirect to the new viewer method
     this.viewLecturePage(page);
-  }
-
-
-  /**
-   * Get status description for different learning statuses
-   */
-  getStatusDescription(statusLearn?: number): string {
-    if (statusLearn === undefined || statusLearn === null) {
-      return 'Trạng thái không xác định.';
-    }
-    switch (statusLearn) {
-      case 0: return 'Bạn chưa bắt đầu học khóa học này. Hãy nhấn "Bắt đầu học" để bắt đầu.';
-      case 1: return 'Bạn đang trong quá trình học tập. Tiếp tục hoàn thành các tài liệu còn lại.';
-      case 2: return 'Tuyệt vời! Bạn đã hoàn thành phần học tập. Có thể bắt đầu làm bài thi.';
-      case 3: return 'Bạn đang trong quá trình làm bài thi. Chúc bạn may mắn!';
-      case 4: return 'Chúc mừng! Bạn đã hoàn thành toàn bộ khóa học một cách xuất sắc.';
-      default: return 'Trạng thái không xác định.';
-    }
   }
 
   /**
@@ -1234,8 +1212,6 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     return this.formatDuration(this.traineeLectureDetail.lecture.courses.houres * 60);
   }
 
-
-  
   /**
    * Helper methods cho template
    */
@@ -1248,28 +1224,66 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
    * Detect learning progress from existing data
    */
   private detectLearningProgress(): void {
-    if (!this.traineeLectureDetail) {
+    if (!this.traineeLectureDetail?.lecturePageTrainees) {
       return;
     }
 
-    // Check if learning is in progress
-    if (this.traineeLectureDetail.statusLearn === 1) { // InProgressLearn
+    // Kiểm tra nếu có trang nào đang được học
+    const inProgressPage = this.traineeLectureDetail.lecturePageTrainees.find(
+      pt => pt.statusLearn === 1 // InProgressLearn
+    );
+    
+    if (inProgressPage) {
       this.isLearningStarted = true;
+      this.currentLearningPageId = inProgressPage.lecturePageId;
+    } else {
+      // Kiểm tra nếu có trang nào đã hoàn thành
+      const completedPages = this.traineeLectureDetail.lecturePageTrainees.filter(
+        pt => pt.statusLearn === 2 // CompletedLearn
+      );
       
-      // If lecturePageTrainees data is available, use it to determine progress
-      if (this.traineeLectureDetail.lecturePageTrainees && Array.isArray(this.traineeLectureDetail.lecturePageTrainees)) {
-        // Find completed pages and current page from API data
-        this.traineeLectureDetail.lecturePageTrainees.forEach((pageTrainee: LecturePageTrainee) => {
-          if (pageTrainee.statusLearn === 2) { // Completed
-            this.completedPageIds.push(pageTrainee.lecturePageId);
-          } else if (pageTrainee.statusLearn === 1) { // In Progress
-            this.currentLearningPageId = pageTrainee.lecturePageId;
-          }
-        });
-
-        // Set current page index based on completed pages
-        this.currentPageIndex = this.completedPageIds.length;
+      if (completedPages.length > 0) {
+        this.isLearningStarted = true;
+        this.completedPageIds = completedPages.map(pt => pt.lecturePageId);
       }
+    }
+  }
+
+  /**
+   * Start learning flow
+   */
+  startLearning(): void {
+    if (!this.traineeLectureDetail?.lecture?.lecturePages || this.traineeLectureDetail.lecture.lecturePages.length === 0) {
+      this.showErrorMessage('Không có tài liệu để học');
+      return;
+    }
+    
+    const firstPage = this.getSortedPages()[0];
+    if (firstPage) {
+      this.isLearningStarted = true;
+      this.currentPageIndex = 0;
+      this.viewLecturePage(firstPage);
+      this.showSuccessMessage('Bắt đầu học tập! Chúc bạn học tốt!');
+    }
+  }
+
+  /**
+   * Get status description for better UX
+   */
+  getStatusDescription(statusLearn: number): string {
+    switch (statusLearn) {
+      case 0:
+        return 'Bạn chưa bắt đầu học khóa học này. Hãy click "Bắt đầu học" để bắt đầu.';
+      case 1:
+        return 'Bạn đang trong quá trình học tập. Tiếp tục theo dõi tiến độ và hoàn thành các tài liệu.';
+      case 2:
+        return 'Chúc mừng! Bạn đã hoàn thành phần học tập. Có thể bắt đầu thi để nhận chứng chỉ.';
+      case 3:
+        return 'Bạn đang trong quá trình thi. Hãy hoàn thành bài thi để nhận kết quả.';
+      case 4:
+        return 'Xuất sắc! Bạn đã hoàn thành toàn bộ khóa học và có thể nhận chứng chỉ.';
+      default:
+        return 'Trạng thái không xác định.';
     }
   }
 }

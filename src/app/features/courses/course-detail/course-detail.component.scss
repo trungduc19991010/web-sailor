@@ -1,8 +1,46 @@
-// Styles cho CourseDetailComponent
+// Enhanced Styles cho CourseDetailComponent
 .course-detail-container {
   width: 100%;
   min-height: 100vh;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  
+  // Responsive grid improvements
+  .grid.grid-cols-1.xl\:grid-cols-5 {
+    @media (max-width: 1280px) {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+      gap: 1rem;
+      padding: 0.75rem;
+    }
+  }
+  
+  // Enhanced sidebar for mobile
+  .xl\:col-span-2 {
+    @media (max-width: 1280px) {
+      grid-column: span 1;
+      max-height: 60vh;
+    }
+    
+    @media (max-width: 768px) {
+      max-height: 50vh;
+      order: 2;
+    }
+  }
+  
+  // Enhanced main content area
+  .xl\:col-span-3 {
+    @media (max-width: 1280px) {
+      grid-column: span 1;
+    }
+    
+    @media (max-width: 768px) {
+      order: 1;
+      min-height: 40vh;
+    }
+  }
 
   // Course header - Updated for light, user-friendly design
   .course-header {
@@ -219,7 +257,7 @@
     }
   }
   
-  // Custom animations
+  // Enhanced Custom animations
   @keyframes shimmer {
     0% {
       left: -100%;
@@ -235,6 +273,92 @@
     }
     50% {
       opacity: 0.5;
+    }
+  }
+  
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes progressFill {
+    from {
+      width: 0%;
+    }
+    to {
+      width: var(--progress-width);
+    }
+  }
+  
+  // Animation classes
+  .animate-slide-in {
+    animation: slideInFromLeft 0.6s ease-out;
+  }
+  
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+  
+  .animate-progress-fill {
+    animation: progressFill 1s ease-out;
+  }
+  
+  // Glass morphism effects
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  // Enhanced hover effects
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  .hover-glow {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.5);
     }
   }
   
@@ -614,5 +738,65 @@
     span {
       color: #666;
     }
+  }
+}
+
+// Responsive utilities for better mobile experience
+.mobile-stack {
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.mobile-full-width {
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.mobile-text-center {
+  @media (max-width: 768px) {
+    text-align: center;
+  }
+}
+
+.mobile-padding {
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.mobile-small-text {
+  @media (max-width: 768px) {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+// Touch-friendly interactive elements
+.touch-target {
+  @media (max-width: 768px) {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+}
+
+// Improved scrollable areas for mobile
+.mobile-scroll {
+  @media (max-width: 768px) {
+    max-height: 50vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+// Better spacing for mobile cards
+.mobile-card-spacing {
+  @media (max-width: 768px) {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
   }
 }

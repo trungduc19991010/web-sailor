@@ -573,11 +573,12 @@ export class CourseListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cho phép hiển thị nút "Học lại" chỉ khi chưa hoàn thành thi
+   * Cho phép hiển thị nút "Học lại" khi đã hoàn thành học, đang thi hoặc đã hoàn thành thi
    */
   canRelearn(course: TraineeLecture): boolean {
     return course.statusLearn === StatusLearn.CompletedLearn ||
-           course.statusLearn === StatusLearn.InProgressExam;
+           course.statusLearn === StatusLearn.InProgressExam ||
+           course.statusLearn === StatusLearn.CompletedExam;
   }
 
   /**
