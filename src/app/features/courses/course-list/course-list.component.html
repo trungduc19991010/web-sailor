@@ -36,48 +36,47 @@
     <div class="container">
       
       <!-- Modern Filters Section with Tailwind -->
-      <div class="mb-8">
-        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+      <div class="mb-6">
+        <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
           <!-- Filter Header -->
-          <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-            <div class="flex items-center gap-3">
-              <div class="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg">
-                <mat-icon class="text-white text-xl">filter_list</mat-icon>
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3">
+            <div class="flex items-center gap-2">
+              <div class="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
+                <mat-icon class="!text-lg !w-5 !h-5" style="color: white !important;">filter_list</mat-icon>
               </div>
               <div>
-                <h3 class="text-white text-lg font-semibold mb-1">Bộ lọc tìm kiếm</h3>
-                <p class="text-blue-100 text-sm">Lọc và tìm kiếm khóa học phù hợp</p>
+                <h3 class="text-white text-base font-semibold mb-0">Bộ lọc tìm kiếm</h3>
+                <p class="text-blue-100 text-xs mb-0">Lọc và tìm kiếm khóa học phù hợp</p>
               </div>
             </div>
           </div>
           
           <!-- Filter Content -->
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
+          <div class="p-4 md:p-6">
+            <!-- Main Filter Row -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
               
               <!-- Search Input -->
-              <div class="col-span-1 md:col-span-2 lg:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  <mat-icon class="text-base mr-1 text-gray-500">search</mat-icon>
-                  Tìm kiếm theo tên
+              <div class="col-span-1 md:col-span-5">
+                <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                  <mat-icon class="!text-base !w-4 !h-4 mr-1 text-gray-500">search</mat-icon>
+                  <span>Tìm kiếm theo tên</span>
                 </label>
-                <div class="relative">
-                  <mat-form-field appearance="outline" class="w-full">
-                    <input matInput 
-                           [(ngModel)]="searchTitle"
-                           (keyup.enter)="applyFilters()"
-                           placeholder="Nhập tên khóa học..."
-                           class="text-sm">
-                    <mat-icon matSuffix class="text-gray-400">search</mat-icon>
-                  </mat-form-field>
-                </div>
+                <mat-form-field appearance="outline" class="w-full">
+                  <input matInput 
+                         [(ngModel)]="searchTitle"
+                         (keyup.enter)="applyFilters()"
+                         placeholder="Nhập tên khóa học..."
+                         class="text-sm">
+                  <mat-icon matSuffix class="text-gray-400">search</mat-icon>
+                </mat-form-field>
               </div>
 
               <!-- Status Filter -->
-              <div class="col-span-1">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  <mat-icon class="text-base mr-1 text-gray-500">assignment</mat-icon>
-                  Trạng thái học
+              <div class="col-span-1 md:col-span-4">
+                <label class="flex items-center text-sm font-medium text-gray-700 mb-2">
+                  <mat-icon class="!text-base !w-4 !h-4 mr-1 text-gray-500">assignment</mat-icon>
+                  <span>Trạng thái học</span>
                 </label>
                 <mat-form-field appearance="outline" class="w-full">
                   <mat-select [(ngModel)]="selectedStatusLearn" 
@@ -89,119 +88,122 @@
                   </mat-select>
                 </mat-form-field>
               </div>
-              
-              <!-- Quick Filter Buttons -->
-              <div class="col-span-1">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  <mat-icon class="text-base mr-1 text-gray-500">flash_on</mat-icon>
-                  Lọc nhanh
-                </label>
-                <div class="flex flex-col gap-1">
-                  <!-- Đã tạo -->
-                  <button 
-                    mat-button 
-                    (click)="quickFilter('created')"
-                    [class]="selectedStatusLearn === 0 ? 'bg-gray-50 text-gray-700 border-gray-200' : 'text-gray-600 hover:bg-gray-50'"
-                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
-                    <mat-icon class="text-sm mr-1">fiber_new</mat-icon>
-                    Đã tạo
-                  </button>
-                  
-                  <!-- Đang học -->
-                  <button 
-                    mat-button 
-                    (click)="quickFilter('in-progress')"
-                    [class]="selectedStatusLearn === 1 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'text-gray-600 hover:bg-gray-50'"
-                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
-                    <mat-icon class="text-sm mr-1">play_arrow</mat-icon>
-                    Đang học
-                  </button>
-                  
-                  <!-- Hoàn thành học -->
-                  <button 
-                    mat-button 
-                    (click)="quickFilter('completed-learn')"
-                    [class]="selectedStatusLearn === 2 ? 'bg-green-50 text-green-700 border-green-200' : 'text-gray-600 hover:bg-gray-50'"
-                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
-                    <mat-icon class="text-sm mr-1">school</mat-icon>
-                    Hoàn thành học
-                  </button>
-                  
-                  <!-- Đang thi -->
-                  <button 
-                    mat-button 
-                    (click)="quickFilter('in-exam')"
-                    [class]="selectedStatusLearn === 3 ? 'bg-orange-50 text-orange-700 border-orange-200' : 'text-gray-600 hover:bg-gray-50'"
-                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
-                    <mat-icon class="text-sm mr-1">quiz</mat-icon>
-                    Đang thi
-                  </button>
-                  
-                  <!-- Hoàn thành thi -->
-                  <button 
-                    mat-button 
-                    (click)="quickFilter('completed-exam')"
-                    [class]="selectedStatusLearn === 4 ? 'bg-purple-50 text-purple-700 border-purple-200' : 'text-gray-600 hover:bg-gray-50'"
-                    class="w-full text-xs px-2 py-1 rounded-md border transition-colors">
-                    <mat-icon class="text-sm mr-1">workspace_premium</mat-icon>
-                    Hoàn thành thi
-                  </button>
-                </div>
-              </div>
 
               <!-- Action Buttons -->
-              <div class="col-span-1 flex flex-col gap-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                  <mat-icon class="text-base mr-1 text-gray-500">settings</mat-icon>
-                  Thao tác
-                </label>
-                
-                <!-- Apply Filters Button -->
+              <div class="col-span-1 md:col-span-3 flex flex-row gap-2" style="margin: 28px 0px;">
                 <button 
                   mat-raised-button 
                   color="primary"
                   (click)="applyFilters()"
-                  class="w-full text-xs py-2">
-                  <mat-icon class="text-base mr-1">search</mat-icon>
-                  Áp dụng
+                  class="flex-1 !h-14">
+                  <mat-icon class="!text-base !w-4 !h-4">search</mat-icon>
+                  <span class="ml-1">Áp dụng</span>
                 </button>
                 
-                <!-- Clear Filters Button -->
                 <button 
                   mat-stroked-button 
-                  color="warn"
                   (click)="clearFilters()"
-                  [disabled]="!searchTitle && !selectedStatusLearn"
-                  class="w-full text-xs py-2">
-                  <mat-icon class="text-base mr-1">clear</mat-icon>
-                  Xóa lọc
+                  [disabled]="!searchTitle && selectedStatusLearn === ''"
+                  class="flex-1 !h-14">
+                  <mat-icon class="!text-base !w-4 !h-4">clear</mat-icon>
+                  <span class="ml-1">Xóa</span>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Quick Filter Chips (Horizontal) -->
+            <div class="mt-3 pt-3 border-t border-gray-200">
+              <label class="flex items-center text-xs font-medium text-gray-600 mb-2">
+                <mat-icon class="!text-sm !w-4 !h-4 mr-1 text-gray-500">flash_on</mat-icon>
+                <span>Lọc nhanh:</span>
+              </label>
+              
+              <div class="flex flex-wrap gap-2">
+                <!-- Đã tạo -->
+                <button 
+                  mat-stroked-button
+                  (click)="quickFilter('created')"
+                  [class.bg-gray-100]="selectedStatusLearn === 0"
+                  [class.border-gray-400]="selectedStatusLearn === 0"
+                  [class.text-gray-800]="selectedStatusLearn === 0"
+                  class="!text-xs !py-1 !px-3 !min-h-0 !h-8 transition-all hover:bg-gray-50">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">fiber_new</mat-icon>
+                  <span>Đã tạo</span>
+                </button>
+                
+                <!-- Đang học -->
+                <button 
+                  mat-stroked-button
+                  (click)="quickFilter('in-progress')"
+                  [class.bg-blue-50]="selectedStatusLearn === 1"
+                  [class.border-blue-400]="selectedStatusLearn === 1"
+                  [class.text-blue-700]="selectedStatusLearn === 1"
+                  class="!text-xs !py-1 !px-3 !min-h-0 !h-8 transition-all hover:bg-blue-50">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">play_arrow</mat-icon>
+                  <span>Đang học</span>
+                </button>
+                
+                <!-- Hoàn thành học -->
+                <button 
+                  mat-stroked-button
+                  (click)="quickFilter('completed-learn')"
+                  [class.bg-green-50]="selectedStatusLearn === 2"
+                  [class.border-green-400]="selectedStatusLearn === 2"
+                  [class.text-green-700]="selectedStatusLearn === 2"
+                  class="!text-xs !py-1 !px-3 !min-h-0 !h-8 transition-all hover:bg-green-50">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">school</mat-icon>
+                  <span>Hoàn thành học</span>
+                </button>
+                
+                <!-- Đang thi -->
+                <button 
+                  mat-stroked-button
+                  (click)="quickFilter('in-exam')"
+                  [class.bg-orange-50]="selectedStatusLearn === 3"
+                  [class.border-orange-400]="selectedStatusLearn === 3"
+                  [class.text-orange-700]="selectedStatusLearn === 3"
+                  class="!text-xs !py-1 !px-3 !min-h-0 !h-8 transition-all hover:bg-orange-50">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">quiz</mat-icon>
+                  <span>Đang thi</span>
+                </button>
+                
+                <!-- Hoàn thành thi -->
+                <button 
+                  mat-stroked-button
+                  (click)="quickFilter('completed-exam')"
+                  [class.bg-purple-50]="selectedStatusLearn === 4"
+                  [class.border-purple-400]="selectedStatusLearn === 4"
+                  [class.text-purple-700]="selectedStatusLearn === 4"
+                  class="!text-xs !py-1 !px-3 !min-h-0 !h-8 transition-all hover:bg-purple-50">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">workspace_premium</mat-icon>
+                  <span>Hoàn thành thi</span>
                 </button>
               </div>
             </div>
             
             <!-- Active Filters Display -->
-            <div class="mt-4 pt-4 border-t border-gray-200" *ngIf="searchTitle || selectedStatusLearn">
+            <div class="mt-3 pt-3 border-t border-gray-200" *ngIf="searchTitle || (selectedStatusLearn !== '' && selectedStatusLearn !== undefined)">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-sm font-medium text-gray-600">
-                  <mat-icon class="text-base mr-1">local_offer</mat-icon>
-                  Bộ lọc đang áp dụng:
+                <span class="flex items-center text-xs font-medium text-gray-600">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">local_offer</mat-icon>
+                  <span>Đang áp dụng:</span>
                 </span>
                 
                 <!-- Search filter tag -->
-                <div *ngIf="searchTitle" class="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                  <mat-icon class="text-sm">search</mat-icon>
-                  <span>"{{ searchTitle }}"</span>
-                  <button mat-icon-button (click)="clearSearchTitle()" class="w-5 h-5 text-blue-600 hover:text-blue-800">
-                    <mat-icon class="text-xs">close</mat-icon>
+                <div *ngIf="searchTitle" class="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs border border-blue-200">
+                  <mat-icon class="!text-sm !w-3 !h-3">search</mat-icon>
+                  <span class="font-medium">"{{ searchTitle }}"</span>
+                  <button mat-icon-button (click)="clearSearchTitle()" class="!w-4 !h-4 !p-0 text-blue-600 hover:text-blue-800">
+                    <mat-icon class="!text-xs !w-3 !h-3">close</mat-icon>
                   </button>
                 </div>
                 
                 <!-- Status filter tag -->
-                <div *ngIf="selectedStatusLearn" class="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                  <mat-icon class="text-sm">assignment</mat-icon>
-                  <span>{{ getStatusLearnDisplayText(selectedStatusLearn) }}</span>
-                  <button mat-icon-button (click)="clearStatusLearn()" class="w-5 h-5 text-green-600 hover:text-green-800">
-                    <mat-icon class="text-xs">close</mat-icon>
+                <div *ngIf="selectedStatusLearn !== '' && selectedStatusLearn !== undefined" class="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-md text-xs border border-green-200">
+                  <mat-icon class="!text-sm !w-3 !h-3">assignment</mat-icon>
+                  <span class="font-medium">{{ getStatusLearnDisplayText(selectedStatusLearn) }}</span>
+                  <button mat-icon-button (click)="clearStatusLearn()" class="!w-4 !h-4 !p-0 text-green-600 hover:text-green-800">
+                    <mat-icon class="!text-xs !w-3 !h-3">close</mat-icon>
                   </button>
                 </div>
                 
@@ -209,9 +211,9 @@
                 <button 
                   mat-button 
                   (click)="clearFilters()"
-                  class="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded">
-                  <mat-icon class="text-sm mr-1">clear_all</mat-icon>
-                  Xóa tất cả
+                  class="!text-xs text-red-600 hover:text-red-800 hover:bg-red-50 !px-2 !py-1 !min-h-0 !h-6 rounded">
+                  <mat-icon class="!text-sm !w-4 !h-4 mr-1">clear_all</mat-icon>
+                  <span>Xóa tất cả</span>
                 </button>
               </div>
             </div>
