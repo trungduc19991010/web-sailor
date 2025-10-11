@@ -728,6 +728,10 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
               // Kiểm tra nếu tất cả trang đã hoàn thành
               if (this.areAllPagesCompleted()) {
                 this.showSuccessMessage('Chúc mừng! Bạn đã hoàn thành tất cả tài liệu!');
+                // Đóng viewer sau khi hoàn thành trang cuối cùng
+                setTimeout(() => {
+                  this.closeLectureViewer();
+                }, 1500);
               }
             }
           },

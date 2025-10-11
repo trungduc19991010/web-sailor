@@ -287,6 +287,31 @@
                         </div>
                       </div>
                     </div>
+                    
+                    <!-- Nút Hoàn thành khóa học - Tab Tổng quan -->
+                    <div class="mt-6" *ngIf="areAllPagesCompleted() && !isCourseCompleted()">
+                      <div class="flex flex-col items-center gap-4">
+                        <button 
+                          mat-raised-button 
+                          (click)="finishCourse()"
+                          class="complete-course-button">
+                          <mat-icon class="mr-3">emoji_events</mat-icon>
+                          Hoàn thành
+                        </button>
+                        
+                        <!-- Hướng dẫn hoàn thành khóa học - màu cam -->
+                        <div class="flex items-start gap-3 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg shadow-md max-w-md">
+                          <div class="flex-shrink-0 mt-0.5">
+                            <mat-icon class="text-orange-600">info</mat-icon>
+                          </div>
+                          <div class="flex-1">
+                            <p class="text-sm font-semibold text-orange-800 leading-relaxed">
+                              Bạn đã hoàn thành nội dung khóa học, chọn <span class="text-orange-900 font-bold">“Hoàn thành”</span> để xác nhận
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -579,24 +604,40 @@
                       </div>
                       
                       <!-- Learning Actions -->
-                      <div class="flex gap-3">
-                        <button 
-                          mat-raised-button 
-                          color="primary"
-                          *ngIf="!isLearningStarted && canStartLearning()"
-                          (click)="startLearning()">
-                          <mat-icon class="mr-2">play_arrow</mat-icon>
-                          Bắt đầu học
-                        </button>
+                      <div class="flex flex-col gap-4">
+                        <!-- Nút Bắt đầu học -->
+                        <div class="flex justify-center" *ngIf="!isLearningStarted && canStartLearning()">
+                          <button 
+                            mat-raised-button 
+                            color="primary"
+                            (click)="startLearning()">
+                            <mat-icon class="mr-2">play_arrow</mat-icon>
+                            Bắt đầu học
+                          </button>
+                        </div>
                         
-                        <button 
-                          mat-raised-button 
-                          color="accent"
-                          *ngIf="areAllPagesCompleted() && !isCourseCompleted()"
-                          (click)="finishCourse()">
-                          <mat-icon class="mr-2">emoji_events</mat-icon>
-                          Hoàn thành
-                        </button>
+                        <!-- Nút Hoàn thành - to hơn và căn giữa -->
+                        <div class="flex flex-col items-center gap-4" *ngIf="areAllPagesCompleted() && !isCourseCompleted()">
+                          <button 
+                            mat-raised-button 
+                            (click)="finishCourse()"
+                            class="complete-course-button">
+                            <mat-icon class="mr-3">emoji_events</mat-icon>
+                            Hoàn thành
+                          </button>
+                          
+                          <!-- Hướng dẫn hoàn thành khóa học - màu cam -->
+                          <div class="flex items-start gap-3 p-4 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg shadow-md max-w-md">
+                            <div class="flex-shrink-0 mt-0.5">
+                              <mat-icon class="text-orange-600">info</mat-icon>
+                            </div>
+                            <div class="flex-1">
+                              <p class="text-sm font-semibold text-orange-800 leading-relaxed">
+                                Bạn đã hoàn thành nội dung khóa học, chọn <span class="text-orange-900 font-bold">“Hoàn thành”</span> để xác nhận
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       
                       <!-- Course Status -->

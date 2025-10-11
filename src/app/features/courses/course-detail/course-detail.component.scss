@@ -143,6 +143,17 @@
       animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     
+    // Custom shake/wiggle animation (like notification bell)
+    @keyframes shake-wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+      20%, 40%, 60%, 80% { transform: rotate(10deg); }
+    }
+    
+    .animate-shake {
+      animation: shake-wiggle 0.8s ease-in-out infinite;
+    }
+    
     // Improve text readability
     .text-gray-900 {
       color: rgb(17, 24, 39) !important;
@@ -405,6 +416,87 @@
   
   @media (max-width: 768px) {
     padding: 16px;
+  }
+}
+
+// Custom styles cho nút Hoàn thành
+.complete-course-button {
+  padding: 1rem 3rem !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(to right, #10b981, #059669) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.3s ease !important;
+  animation: pulse-glow 2s ease-in-out infinite, zoom-in-out 2s ease-in-out infinite !important;
+  position: relative !important;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #10b981, #059669, #10b981);
+    border-radius: 0.75rem;
+    z-index: -1;
+    filter: blur(15px);
+    opacity: 0.7;
+    animation: glow-rotate 3s ease-in-out infinite;
+  }
+
+  &:hover {
+    transform: scale(1.08) !important;
+  }
+
+  mat-icon {
+    font-size: 2rem !important;
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+}
+
+// Keyframes cho pulse glow animation - tỏ màu xanh lá liên tục
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.6),
+                0 0 50px rgba(16, 185, 129, 0.4),
+                0 0 75px rgba(16, 185, 129, 0.2),
+                0 0 100px rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.9),
+                0 0 70px rgba(16, 185, 129, 0.6),
+                0 0 100px rgba(16, 185, 129, 0.4),
+                0 0 130px rgba(16, 185, 129, 0.2);
+  }
+}
+
+// Keyframes cho zoom in/out animation
+@keyframes zoom-in-out {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+// Keyframes cho glow rotate animation
+@keyframes glow-rotate {
+  0% {
+    filter: blur(15px);
+    opacity: 0.7;
+  }
+  50% {
+    filter: blur(20px);
+    opacity: 1;
+  }
+  100% {
+    filter: blur(15px);
+    opacity: 0.7;
   }
 }
 
