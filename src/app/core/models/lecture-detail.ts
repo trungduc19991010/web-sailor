@@ -194,7 +194,7 @@ export function getLecturePageTypeIcon(type: LecturePageType): string {
 export function getStatusLearnDisplayText(status: StatusLearn): string {
   switch (status) {
     case StatusLearn.Created:
-      return 'Đã tạo';
+      return 'Chưa học';
     case StatusLearn.InProgressLearn:
       return 'Đang học';
     case StatusLearn.CompletedLearn:

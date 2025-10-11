@@ -66,7 +66,7 @@ export class CourseListComponent implements OnInit, OnDestroy {
   // StatusLearn options cho TraineeLecture
   statusLearnOptions = [
     { value: '', label: 'Tất cả trạng thái' },
-    { value: StatusLearn.Created, label: 'Đã tạo' },
+    { value: StatusLearn.Created, label: 'Chưa học' },
     { value: StatusLearn.InProgressLearn, label: 'Đang học' },
     { value: StatusLearn.CompletedLearn, label: 'Hoàn thành học' },
     { value: StatusLearn.InProgressExam, label: 'Đang thi' },
@@ -549,14 +549,14 @@ export class CourseListComponent implements OnInit, OnDestroy {
    * Check if can start learning
    */
   canStartLearning(course: TraineeLecture): boolean {
-    return course.statusLearn === StatusLearn.Created;
+    return course.isRegistered && course.statusLearn === StatusLearn.Created;
   }
 
   /**
    * Check if can continue learning
    */
   canContinueLearning(course: TraineeLecture): boolean {
-    return course.statusLearn === StatusLearn.InProgressLearn;
+    return course.isRegistered && course.statusLearn === StatusLearn.InProgressLearn;
   }
 
   /**
@@ -564,28 +564,33 @@ export class CourseListComponent implements OnInit, OnDestroy {
    */
   canStartExam(course: TraineeLecture): boolean {
     // Cho phép bắt đầu/tiếp tục/thi lại khi:
+    // - Đã đăng ký
     // - Đã hoàn thành học (chuẩn bị thi)
     // - Đang thi dở
     // - Đã hoàn thành thi (cho phép thi lại)
-    return course.statusLearn === StatusLearn.CompletedLearn || 
-           course.statusLearn === StatusLearn.InProgressExam ||
-           course.statusLearn === StatusLearn.CompletedExam;
+    return course.isRegistered && (
+      course.statusLearn === StatusLearn.CompletedLearn || 
+      course.statusLearn === StatusLearn.InProgressExam ||
+      course.statusLearn === StatusLearn.CompletedExam
+    );
   }
 
   /**
-   * Cho phép hiển thị nút "Học lại" khi đã hoàn thành học, đang thi hoặc đã hoàn thành thi
+   * Cho phép hiển thị nút "Học lại" khi đã đăng ký và đã hoàn thành học, đang thi hoặc đã hoàn thành thi
    */
   canRelearn(course: TraineeLecture): boolean {
-    return course.statusLearn === StatusLearn.CompletedLearn ||
-           course.statusLearn === StatusLearn.InProgressExam ||
-           course.statusLearn === StatusLearn.CompletedExam;
+    return course.isRegistered && (
+      course.statusLearn === StatusLearn.CompletedLearn ||
+      course.statusLearn === StatusLearn.InProgressExam ||
+      course.statusLearn === StatusLearn.CompletedExam
+    );
   }
 
   /**
    * Check if completed
    */
   isCompleted(course: TraineeLecture): boolean {
-    return course.statusLearn === StatusLearn.CompletedExam;
+    return course.isRegistered && course.statusLearn === StatusLearn.CompletedExam;
   }
   
   /**

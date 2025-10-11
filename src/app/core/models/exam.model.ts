@@ -5,7 +5,7 @@
 
 /**
  * Trạng thái bài thi
- * 0: Đã tạo (chưa bắt đầu)
+ * 0: Chưa học (chưa bắt đầu)
  * 1: Đang làm bài
  * 2: Đã hoàn thành
  */

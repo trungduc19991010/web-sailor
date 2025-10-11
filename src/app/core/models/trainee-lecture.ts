@@ -45,7 +45,7 @@ export interface TraineeLectureResponse {
 export function getStatusLearnDisplayText(status: StatusLearn): string {
   const statusMap = {
     [StatusLearn.All]: 'Tất cả trạng thái',
-    [StatusLearn.Created]: 'Đã tạo',
+    [StatusLearn.Created]: 'Chưa học',
     [StatusLearn.InProgressLearn]: 'Đang học',
     [StatusLearn.CompletedLearn]: 'Hoàn thành học',
     [StatusLearn.InProgressExam]: 'Đang thi',
