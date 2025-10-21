@@ -1290,5 +1290,24 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
         return 'Trạng thái không xác định.';
     }
   }
+
+  /**
+   * View certificate - Mở chứng chỉ PDF từ Google Drive
+   */
+  viewCertificate(): void {
+    if (!this.traineeLectureDetail) {
+      this.showErrorMessage('Không tìm thấy thông tin khóa học');
+      return;
+    }
+
+    if (!this.traineeLectureDetail.certification) {
+      this.toast.warning('Chứng chỉ chưa được cấp', 3000);
+      return;
+    }
+
+    // Mở link PDF drive trong tab mới
+    window.open(this.traineeLectureDetail.certification, '_blank');
+    this.toast.success('Đang mở chứng chỉ...', 2000);
+  }
 }
 

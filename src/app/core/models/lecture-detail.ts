@@ -139,6 +139,9 @@ export interface LecturePageTrainee {
   statusLearn: StatusLearn;
   timetStartLearn: string | null;
   timeCompletedLearn: string | null;
+  certification?: string | null; // Link PDF chứng chỉ từ Google Drive
+  isCertified?: boolean; // Trạng thái đã được cấp chứng chỉ
+  certificateDate?: string | null; // Ngày cấp chứng chỉ
 }
 
 export interface LectureDetailResponse {
