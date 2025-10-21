@@ -78,46 +78,62 @@
       </div>
     </section>
 
-    <!-- Training Fields Section -->
-    <section class="py-20 lg:py-24 bg-white" *ngIf="trainingFields.length > 0">
+    <!-- Khóa học nổi bật Section (API Public Courses) -->
+    <section class="py-20 lg:py-24 bg-white" *ngIf="publicCourses.length > 0">
       <div class="container mx-auto px-6">
         <div class="text-center mb-16">
           <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4 relative inline-block">
-            Lĩnh vực đào tạo
-            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+            Khóa học nổi bật
+            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-orange-500 to-red-600 rounded-full"></div>
           </h2>
           <p class="text-lg text-gray-600 max-w-3xl mx-auto mt-6">
-            Chúng tôi cung cấp hệ thống học đa dạng ngành nghề trong lĩnh vực hàng hải
+            Các khóa học đào tạo hàng hải chuyên nghiệp được tin tưởng hàng đầu
           </p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div class="group bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100"
-               *ngFor="let field of trainingFields; trackBy: trackByFieldId"
-               (click)="onTrainingFieldClick(field)"
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-200 overflow-hidden"
+               *ngFor="let course of publicCourses; let i = index"
                role="button"
                tabindex="0">
             
-            <div class="text-center mb-6">
-              <div class="mx-auto mb-4 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl text-blue-600 flex items-center justify-center w-fit group-hover:scale-110 transition-transform duration-300">
-                <mat-icon class="text-3xl">{{ field.icon }}</mat-icon>
+            <!-- Card header with gradient -->
+            <div class="relative bg-gradient-to-r from-blue-500 to-indigo-600 p-5">
+              <div class="absolute top-3 right-3">
+                <div class="bg-white px-3 py-1 rounded-lg shadow-sm">
+                  <span class="text-blue-600 text-xs font-bold">{{ course.code }}</span>
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-center">
+                <div class="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-xl">
+                  <mat-icon class="text-white text-3xl">school</mat-icon>
+                </div>
               </div>
             </div>
             
-            <div class="text-center">
-              <div class="text-lg font-bold text-blue-600 mb-3">{{ field.courseCount }} Khóa học</div>
-              <h3 class="text-xl font-bold text-gray-800 mb-3">{{ field.name }}</h3>
-              <p class="text-gray-600 text-sm leading-relaxed" *ngIf="field.description">
-                {{ field.description }}
-              </p>
-            </div>
-            
-            <!-- Hover indicator -->
-            <div class="mt-6 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <span class="inline-flex items-center text-blue-600 font-medium text-sm">
-                Xem chi tiết
-                <mat-icon class="ml-1 text-sm">arrow_forward</mat-icon>
-              </span>
+            <!-- Card content -->
+            <div class="p-5">
+              <!-- Vietnamese name -->
+              <h3 class="text-base font-bold text-gray-800 mb-3 leading-snug group-hover:text-blue-600 transition-colors duration-300">
+                {{ course.name }}
+              </h3>
+              
+              <!-- English name -->
+              <div class="mb-3">
+                <p class="text-sm text-gray-500 italic leading-relaxed">
+                  {{ course.eName }}
+                </p>
+              </div>
+              
+              <!-- Note/Description -->
+              <div class="" *ngIf="course.note">
+                <div class="bg-blue-50 rounded-lg p-3 border-l-4 border-blue-400">
+                  <p class="text-xs text-gray-700 leading-relaxed">
+                    {{ course.note }}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

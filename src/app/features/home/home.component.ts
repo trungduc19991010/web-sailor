@@ -14,7 +14,8 @@ import {
   TrainingField,
   Course,
   PlatformFeature,
-  HomePageData
+  HomePageData,
+  PublicCourse
 } from './services/home.service';
 import { DataService, User } from '../../core/services/data.service';
 
@@ -30,6 +31,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   trainingFields: TrainingField[] = [];
   featuredCourses: Course[] = [];
   platformFeatures: PlatformFeature[] = [];
+  publicCourses: PublicCourse[] = [];
 
   // Loading states
   loading = false;
@@ -78,6 +80,13 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.platformFeatures = data.platformFeatures;
           this.animateStats();
         }
+      });
+
+    // Subscribe to public courses
+    this.homeService.publicCourses$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(courses => {
+        this.publicCourses = courses;
       });
   }
 

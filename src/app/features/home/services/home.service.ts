@@ -1,6 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map, catchError } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
 // Import configuration data
 import {
@@ -40,6 +42,28 @@ export interface Course {
   level?: 'Beginner' | 'Intermediate' | 'Advanced';
 }
 
+// Interface cho API response từ backend
+export interface PublicCourse {
+  code: string;
+  name: string;
+  normalizationName: string;
+  eName: string;
+  note: string | null;
+}
+
+export interface ApiResponse<T> {
+  result: number;
+  code: string;
+  description: string;
+  data: T;
+  pagingResponse?: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    totalRecords: number;
+  };
+}
+
 export interface PlatformFeature {
   id: number;
   title: string;
@@ -58,6 +82,9 @@ export interface HomePageData {
   providedIn: 'root'
 })
 export class HomeService {
+  private http = inject(HttpClient);
+  private apiUrl = environment.services_domain;
+
   // BehaviorSubject để quản lý state
   private homeDataSubject = new BehaviorSubject<HomePageData | null>(null);
   public homeData$ = this.homeDataSubject.asObservable();
@@ -65,9 +92,14 @@ export class HomeService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
+  // BehaviorSubject cho public courses
+  private publicCoursesSubject = new BehaviorSubject<PublicCourse[]>([]);
+  public publicCourses$ = this.publicCoursesSubject.asObservable();
+
   constructor() {
     // Tự động load dữ liệu khi service được khởi tạo
     this.loadHomeData();
+    this.loadPublicCourses();
   }
 
   /**
@@ -156,6 +188,34 @@ export class HomeService {
         observer.next(field);
         observer.complete();
       });
+    });
+  }
+
+  /**
+   * Lấy danh sách khóa học công khai từ API (không cần đăng nhập)
+   */
+  getPublicCourses(): Observable<PublicCourse[]> {
+    const url = `${this.apiUrl}/Courses/get-public?IsPaging=true&PageNumber=1&PageSize=6`;
+    return this.http.get<ApiResponse<PublicCourse[]>>(url).pipe(
+      map(response => {
+        if (response.result === 1 && response.data) {
+          return response.data;
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Lỗi khi lấy khóa học công khai:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Load danh sách khóa học công khai
+   */
+  loadPublicCourses(): void {
+    this.getPublicCourses().subscribe(courses => {
+      this.publicCoursesSubject.next(courses);
     });
   }
 }
