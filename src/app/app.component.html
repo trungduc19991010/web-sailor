@@ -29,6 +29,10 @@
                 <mat-icon>school</mat-icon>
                 <span>Khóa học của tôi</span>
               </button>
+              <button mat-menu-item (click)="openChangePasswordDialog()">
+                <mat-icon>lock_reset</mat-icon>
+                <span>Thay đổi mật khẩu</span>
+              </button>
               <button mat-menu-item>
                 <mat-icon>settings</mat-icon>
                 <span>Cài đặt</span>
@@ -228,6 +232,10 @@
           <li><a routerLink="/courses" (click)="closeMobileMenu()">
             <mat-icon>school</mat-icon>
             <span>Khóa học của tôi</span>
+          </a></li>
+          <li><a href="#" (click)="openChangePasswordDialog(); closeMobileMenu()">
+            <mat-icon>lock_reset</mat-icon>
+            <span>Thay đổi mật khẩu</span>
           </a></li>
           <li><a href="#" (click)="closeMobileMenu()">
             <mat-icon>settings</mat-icon>

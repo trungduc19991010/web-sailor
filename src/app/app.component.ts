@@ -18,6 +18,7 @@ import { map } from 'rxjs/operators';
 
 import { LoginDialogComponent } from './components/login-dialog/login-dialog.component';
 import { UserProfileDialogComponent } from './components/user-profile-dialog/user-profile-dialog.component';
+import { ChangePasswordDialogComponent } from './components/change-password-dialog/change-password-dialog.component';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { AuthenticationService } from './core/guards/authentication.service';
 import { UserToken } from './core/models/user-token';
@@ -133,6 +134,19 @@ export class AppComponent implements OnInit, OnDestroy {
       disableClose: false,
       autoFocus: true,
       panelClass: 'user-profile-dialog-container'
+    });
+  }
+
+  /**
+   * Mở dialog thay đổi mật khẩu
+   */
+  openChangePasswordDialog(): void {
+    this.dialog.open(ChangePasswordDialogComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+      disableClose: false,
+      autoFocus: true,
+      panelClass: 'change-password-dialog-container'
     });
   }
 

@@ -11,6 +11,11 @@ export interface UpdateUserInfoRequest {
   description: string;
 }
 
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -31,5 +36,12 @@ export class UserService {
    */
   updateUserInfo(data: UpdateUserInfoRequest): Observable<ResponseApi<any>> {
     return this.http.post<ResponseApi<any>>(`${this.apiUrl}/update-info`, data);
+  }
+
+  /**
+   * Thay đổi mật khẩu
+   */
+  changePassword(data: ChangePasswordRequest): Observable<ResponseApi<any>> {
+    return this.http.post<ResponseApi<any>>(`${this.apiUrl}/change-password`, data);
   }
 }
