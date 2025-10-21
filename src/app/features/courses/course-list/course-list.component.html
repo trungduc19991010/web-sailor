@@ -297,7 +297,7 @@
           <!-- Course image -->
           <div class="course-image">
             <img src="assets/images/default-course.jpg" 
-                 [alt]="course.title"
+                 [alt]="course.tittle"
                  class="course-thumbnail">
             
             <!-- Status badge overlay -->
@@ -313,7 +313,7 @@
           </div>
           
           <mat-card-header>
-            <mat-card-title [title]="course.title">{{ course.title }}</mat-card-title>
+            <mat-card-title [title]="course.tittle">{{ course.tittle }}</mat-card-title>
             <mat-card-subtitle>
               <div class="course-meta">
                 <span class="course-name" [title]="course.courseName">
@@ -339,7 +339,7 @@
               <div class="info-item" *ngIf="course.objects">
                 <div class="info-label">
                   <mat-icon>flag</mat-icon>
-                  <strong>Mục tiêu:</strong>
+                  <strong>Đối tương học:</strong>
                 </div>
                 <p class="info-content" [title]="course.objects">{{ course.objects }}</p>
               </div>

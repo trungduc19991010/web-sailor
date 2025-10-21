@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatPaginatorModule, MatPaginatorIntl, PageEvent } from '@angular/material/paginator';
 import { Subject, takeUntil } from 'rxjs';
 
 // Import service và interfaces
@@ -18,10 +19,14 @@ import {
   PublicCourse
 } from './services/home.service';
 import { DataService, User } from '../../core/services/data.service';
+import { VietnamesePaginatorIntl } from '../../core/services/vietnamese-paginator-intl.service';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatListModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatCardModule, MatButtonModule, MatListModule, MatIconModule, MatProgressSpinnerModule, MatPaginatorModule],
+  providers: [
+    { provide: MatPaginatorIntl, useClass: VietnamesePaginatorIntl }
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -31,11 +36,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   trainingFields: TrainingField[] = [];
   featuredCourses: Course[] = [];
   platformFeatures: PlatformFeature[] = [];
-  publicCourses: PublicCourse[] = [];
+  publicCourses: PublicCourse[] = []; // Hiển thị trực tiếp từ API
+  
+  // Pagination for public courses (server-side)
+  pageSize = 6; // Mỗi trang 6 bản ghi
+  pageIndex = 0; // Backend sử dụng pageNumber bắt đầu từ 1
+  totalCourses = 0;
+  totalPages = 0;
 
   // Loading states
   loading = false;
   homeDataLoading = false;
+  coursesLoading = false;
 
   // Thuộc tính cũ (giữ lại để tương thích)
   users: User[] = [];
@@ -49,6 +61,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.coursesLoading = true; // Set loading state ban đầu
     this.loadHomeData();
     this.loadUsers(); // Giữ lại để tương thích
   }
@@ -87,6 +100,20 @@ export class HomeComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(courses => {
         this.publicCourses = courses;
+        console.log('Public courses loaded:', courses.length, courses);
+        this.coursesLoading = false;
+      });
+    
+    // Subscribe to paging response
+    this.homeService.pagingResponse$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(pagingResponse => {
+        if (pagingResponse) {
+          this.totalCourses = pagingResponse.totalRecords;
+          this.totalPages = pagingResponse.totalPages;
+          this.pageIndex = pagingResponse.currentPage - 1; // Convert to 0-based index
+          console.log('Paging info:', pagingResponse);
+        }
       });
   }
 
@@ -95,6 +122,32 @@ export class HomeComponent implements OnInit, OnDestroy {
    */
   refreshHomeData(): void {
     this.homeService.refreshHomeData();
+    this.homeService.loadPublicCourses(1, this.pageSize); // Reset về trang 1
+  }
+
+  /**
+   * Xử lý sự kiện thay đổi trang (server-side)
+   */
+  onPageChange(event: PageEvent): void {
+    console.log('Page changed:', event);
+    
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    
+    // Gọi API với pageNumber (backend bắt đầu từ 1)
+    const pageNumber = event.pageIndex + 1;
+    console.log(`Loading page ${pageNumber} with ${event.pageSize} items`);
+    
+    this.coursesLoading = true;
+    this.homeService.loadPublicCourses(pageNumber, event.pageSize);
+    
+    // Scroll to top of courses section
+    setTimeout(() => {
+      const coursesSection = document.querySelector('.courses-section');
+      if (coursesSection) {
+        coursesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }
 
   /**

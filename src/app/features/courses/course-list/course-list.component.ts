@@ -509,7 +509,7 @@ export class CourseListComponent implements OnInit, OnDestroy {
     lastScore?: number
   ): void {
     const dialogData: ExamConfirmData = {
-      courseName: course.title,
+      courseName: course.tittle,
       timeOfExam: examData.timeOfExam,
       numberQuestions: examData.numberQuestions,
       minimumPercentageToComplete: examData.minimumPercentageToComplete,

@@ -31,3 +31,50 @@ mat-icon {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+// Mat Paginator custom styles
+::ng-deep .mat-mdc-paginator {
+  background: transparent !important;
+  color: #374151 !important;
+  
+  .mat-mdc-paginator-container {
+    padding: 0.75rem 1rem;
+    min-height: auto;
+    justify-content: center;
+  }
+  
+  .mat-mdc-paginator-page-size {
+    .mat-mdc-paginator-page-size-label {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-right: 0.5rem;
+    }
+    
+    .mat-mdc-form-field {
+      font-size: 0.875rem;
+    }
+  }
+  
+  .mat-mdc-paginator-range-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0 1.5rem;
+  }
+  
+  .mat-mdc-icon-button {
+    color: #3b82f6;
+    
+    &:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    &.mat-mdc-button-disabled {
+      color: #d1d5db;
+    }
+  }
+}
+
+// Smooth scroll behavior
+.courses-section {
+  scroll-margin-top: 80px;
+}

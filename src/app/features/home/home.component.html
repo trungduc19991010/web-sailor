@@ -79,7 +79,7 @@
     </section>
 
     <!-- Khóa học nổi bật Section (API Public Courses) -->
-    <section class="py-20 lg:py-24 bg-white" *ngIf="publicCourses.length > 0">
+    <section class="py-20 lg:py-24 bg-white courses-section">
       <div class="container mx-auto px-6">
         <div class="text-center mb-16">
           <h2 class="text-3xl lg:text-4xl font-bold text-gray-800 mb-4 relative inline-block">
@@ -91,7 +91,20 @@
           </p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Loading State -->
+        <div *ngIf="coursesLoading" class="flex justify-center items-center py-20">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p class="ml-4 text-gray-600">Đang tải khóa học...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!coursesLoading && publicCourses.length === 0" class="text-center py-20">
+          <mat-icon class="text-gray-400 text-6xl mb-4">school_off</mat-icon>
+          <p class="text-gray-600 text-lg">Không có khóa học nào</p>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!coursesLoading && publicCourses.length > 0">
           <div class="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-200 overflow-hidden"
                *ngFor="let course of publicCourses; let i = index"
                role="button"
@@ -136,6 +149,19 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center" *ngIf="totalCourses > pageSize">
+          <mat-paginator 
+            [length]="totalCourses"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [pageSizeOptions]="[6, 12, 18, 24]"
+            [showFirstLastButtons]="true"
+            (page)="onPageChange($event)"
+            class="bg-transparent">
+          </mat-paginator>
         </div>
       </div>
     </section>

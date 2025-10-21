@@ -11,7 +11,7 @@ export enum StatusLearn {
 // Interface cho TraineeLecture từ API response
 export interface TraineeLecture {
   lectureId: string;
-  title: string;
+  tittle: string;
   description: string;
   objects: string;
   note: string;

@@ -95,11 +95,15 @@ export class HomeService {
   // BehaviorSubject cho public courses
   private publicCoursesSubject = new BehaviorSubject<PublicCourse[]>([]);
   public publicCourses$ = this.publicCoursesSubject.asObservable();
+  
+  // BehaviorSubject cho paging response
+  private pagingResponseSubject = new BehaviorSubject<any>(null);
+  public pagingResponse$ = this.pagingResponseSubject.asObservable();
 
   constructor() {
     // Tự động load dữ liệu khi service được khởi tạo
     this.loadHomeData();
-    this.loadPublicCourses();
+    this.loadPublicCourses(1, 6); // Load trang đầu tiên với 6 items
   }
 
   /**
@@ -193,29 +197,45 @@ export class HomeService {
 
   /**
    * Lấy danh sách khóa học công khai từ API (không cần đăng nhập)
+   * @param pageNumber Số trang (bắt đầu từ 1)
+   * @param pageSize Số bản ghi mỗi trang
    */
-  getPublicCourses(): Observable<PublicCourse[]> {
-    const url = `${this.apiUrl}/Courses/get-public?IsPaging=true&PageNumber=1&PageSize=6`;
+  getPublicCourses(pageNumber: number = 1, pageSize: number = 6): Observable<ApiResponse<PublicCourse[]>> {
+    const url = `${this.apiUrl}/Courses/get-public?IsPaging=true&PageNumber=${pageNumber}&PageSize=${pageSize}`;
     return this.http.get<ApiResponse<PublicCourse[]>>(url).pipe(
-      map(response => {
-        if (response.result === 1 && response.data) {
-          return response.data;
-        }
-        return [];
-      }),
       catchError(error => {
         console.error('Lỗi khi lấy khóa học công khai:', error);
-        return of([]);
+        // Trả về empty response
+        return of({
+          result: 0,
+          code: 'ERROR',
+          description: 'Lỗi khi tải dữ liệu',
+          data: [],
+          pagingResponse: {
+            currentPage: 1,
+            pageSize: pageSize,
+            totalPages: 0,
+            totalRecords: 0
+          }
+        });
       })
     );
   }
 
   /**
    * Load danh sách khóa học công khai
+   * @param pageNumber Số trang
+   * @param pageSize Số bản ghi mỗi trang
    */
-  loadPublicCourses(): void {
-    this.getPublicCourses().subscribe(courses => {
-      this.publicCoursesSubject.next(courses);
+  loadPublicCourses(pageNumber: number = 1, pageSize: number = 6): void {
+    this.getPublicCourses(pageNumber, pageSize).subscribe(response => {
+      if (response.result === 1) {
+        this.publicCoursesSubject.next(response.data || []);
+        this.pagingResponseSubject.next(response.pagingResponse);
+      } else {
+        this.publicCoursesSubject.next([]);
+        this.pagingResponseSubject.next(null);
+      }
     });
   }
 }
