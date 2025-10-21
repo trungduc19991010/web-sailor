@@ -22,6 +22,7 @@ import { ChangePasswordDialogComponent } from './components/change-password-dial
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { AuthenticationService } from './core/guards/authentication.service';
 import { UserToken } from './core/models/user-token';
+import { ToastService } from './core/services/toast.service';
 
 @Component({
   selector: 'app-root',
@@ -61,6 +62,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private dialog: MatDialog,
     public authenticationService: AuthenticationService,
+    private toast: ToastService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Khởi tạo isLoggedIn$ observable sau khi authenticationService đã được inject
@@ -152,6 +154,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authenticationService.logout();
+    this.toast.success('Đã đăng xuất thành công!', 3000);
   }
 
   /**

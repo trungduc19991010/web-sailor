@@ -600,10 +600,11 @@ export class CourseListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if completed
+   * Check if completed - Hiển thị nút chứng chỉ khi có certification
    */
   isCompleted(course: TraineeLecture): boolean {
-    return course.isRegistered && course.statusLearn === StatusLearn.CompletedExam;
+    // Hiển thị nút chứng chỉ nếu có certification hoặc isCertified
+    return course.isRegistered && (course.certification != null || course.isCertified === true);
   }
   
   /**
