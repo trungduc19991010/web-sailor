@@ -22,6 +22,8 @@ export interface TraineeLecture {
   statusLearn: StatusLearn;
   statusExam?: number; // 0=Created, 1=InProgress, 2=Completed
   attemptNumber?: number; // Số lần thi (attemptNumber - 1 = số lần thi lại)
+  certification?: string | null; // ID chứng chỉ nếu đã được cấp
+  isCertified?: boolean; // Trạng thái đã được cấp chứng chỉ
 }
 
 // Interface cho request parameters

@@ -542,7 +542,15 @@ export class CourseListComponent implements OnInit, OnDestroy {
    */
   viewCertificate(course: TraineeLecture): void {
     console.log('Xem chứng chỉ khóa học:', course);
-    // TODO: Implement certificate viewing
+    
+    if (!course.certification) {
+      this.toast.warning('Chứng chỉ chưa được cấp', 3000);
+      return;
+    }
+    
+    // Mở link PDF drive trong tab mới
+    window.open(course.certification, '_blank');
+    this.toast.success('Đang mở chứng chỉ...', 2000);
   }
 
   /**
@@ -563,6 +571,11 @@ export class CourseListComponent implements OnInit, OnDestroy {
    * Check if can start exam (bao gồm thi lại)
    */
   canStartExam(course: TraineeLecture): boolean {
+    // Ẩn nút thi lại nếu đã có chứng chỉ
+    if (course.certification || course.isCertified) {
+      return false;
+    }
+    
     // Cho phép bắt đầu/tiếp tục/thi lại khi:
     // - Đã đăng ký
     // - Đã hoàn thành học (chuẩn bị thi)
