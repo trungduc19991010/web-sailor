@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map, catchError } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+import { HdsdResponse, HdsdItem } from '../../../core/models/hdsd.model';
 
 // Interfaces cho dữ liệu guide
 export interface GuideDocument {
@@ -9,7 +12,8 @@ export interface GuideDocument {
   description?: string;
   category: string;
   categoryName: string;
-  url: string;
+  url: string; // URL đã được xử lý cho embed
+  originalUrl?: string; // URL gốc từ API
   fileType: 'pdf' | 'video' | 'slide'; // Phân loại tệp
   fileName?: string;
   fileSize?: number; // in bytes
@@ -39,15 +43,116 @@ export class GuideService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
-  constructor() {
+  private apiUrl = `${environment.services_domain}/HDSDTrainee`;
+
+  constructor(private http: HttpClient) {
     // Tự động load dữ liệu khi service được khởi tạo
     this.loadGuides();
   }
 
   /**
-   * Lấy danh sách tất cả tài liệu hướng dẫn
+   * Lấy danh sách tất cả tài liệu hướng dẫn từ API
    */
   getGuides(): Observable<GuideDocument[]> {
+    return this.http.get<HdsdResponse>(`${this.apiUrl}/get-all`).pipe(
+      map(response => {
+        if (response.result === 1 && response.data) {
+          return this.mapHdsdToGuideDocuments(response.data);
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching guides from API:', error);
+        // Fallback to mock data if API fails
+        return this.getMockGuides();
+      })
+    );
+  }
+
+  private mapHdsdToGuideDocuments(hdsdItems: HdsdItem[]): GuideDocument[] {
+    return hdsdItems.map((item, index) => ({
+      id: index + 1, // Sử dụng index vì API trả về string id
+      title: item.title,
+      description: item.descriptTion || item.subTitle,
+      category: this.getCategoryFromCode(item.code),
+      categoryName: item.subTitle || 'Hướng dẫn',
+      url: this.convertToEmbeddableUrl(item.url), // URL đã xử lý cho embed
+      originalUrl: item.url, // Lưu URL gốc từ API
+      fileType: this.detectFileType(item.url),
+      fileName: `${item.code}.pdf`,
+      fileSize: undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: '1.0',
+      author: 'VOSCO EDU',
+      tags: [item.code, item.subTitle]
+    }));
+  }
+
+  /**
+   * Determine category from code
+   */
+  private getCategoryFromCode(code: string): string {
+    const codeUpper = code.toUpperCase();
+    if (codeUpper.includes('HDSD')) return 'user-manual';
+    if (codeUpper.includes('FAQ')) return 'faq';
+    if (codeUpper.includes('STCW')) return 'stcw-guide';
+    if (codeUpper.includes('POLICY')) return 'policy';
+    return 'user-manual';
+  }
+
+  /**
+   * Detect file type from URL
+   */
+  private detectFileType(url: string): 'pdf' | 'video' | 'slide' {
+    const urlLower = url.toLowerCase();
+    if (urlLower.includes('drive.google.com/file')) return 'video';
+    if (urlLower.includes('presentation') || urlLower.includes('slides')) return 'slide';
+    return 'pdf';
+  }
+
+  /**
+   * Convert Google Drive URL to embeddable format
+   * Theo course-detail: Sử dụng trực tiếp /preview thay vì wrap trong Google Docs Viewer
+   */
+  private convertToEmbeddableUrl(url: string): string {
+    // Google Drive file pattern - Extract file ID
+    const driveFileRegex = /drive\.google\.com.*\/d\/([a-zA-Z0-9_-]+)/;
+    const match = url.match(driveFileRegex);
+    
+    if (match && match[1]) {
+      const fileId = match[1];
+      // Sử dụng trực tiếp /preview như course-detail
+      // Google Drive /preview có thể embed được nếu file đã public
+      return `https://drive.google.com/file/d/${fileId}/preview`;
+    }
+
+    // Google Slides pattern
+    const slidesRegex = /docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/;
+    const slidesMatch = url.match(slidesRegex);
+    
+    if (slidesMatch && slidesMatch[1]) {
+      const fileId = slidesMatch[1];
+      return `https://docs.google.com/presentation/d/${fileId}/embed?start=false&loop=false&delayms=3000`;
+    }
+
+    // Nếu là URL Google Drive khác - sử dụng Google Docs Viewer
+    if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    }
+
+    // Fallback: Sử dụng Google Docs Viewer cho file document không phải Google
+    if (url.toLowerCase().match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$/)) {
+      return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    }
+
+    return url;
+  }
+
+  /**
+   * Fallback mock data nếu API fail
+   */
+  private getMockGuides(): Observable<GuideDocument[]> {
     const guides: GuideDocument[] = [
       {
         id: 1,
@@ -179,7 +284,7 @@ export class GuideService {
       },
     ];
 
-    return of(guides).pipe(delay(800)); // Simulate API call
+    return of(guides).pipe(delay(800));
   }
 
   /**

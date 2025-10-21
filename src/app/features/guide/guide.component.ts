@@ -102,15 +102,15 @@ export class GuideComponent implements OnInit, OnDestroy {
 
   /**
    * Load content (PDF or Video)
+   * URL đã được xử lý sẵn bởi service, không cần convert lại
    */
   private loadContent(guide: GuideDocument): void {
     this.contentLoading = true;
 
-    let contentUrl = guide.url;
-    // Convert Google-related links to embeddable URLs
-    if (guide.url.includes('google.com')) {
-      contentUrl = this.getEmbeddableGoogleUrl(guide);
-    }
+    // Sử dụng trực tiếp URL từ guide (service đã convert sẵn)
+    const contentUrl = guide.url;
+    
+    console.log('Loading content from URL:', contentUrl);
 
     // Sanitize URL to make it safe
     this.safeContentUrl = this.sanitizer.bypassSecurityTrustResourceUrl(contentUrl);
@@ -119,42 +119,17 @@ export class GuideComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.contentLoading = false;
       this.showContentViewer = true;
-    }, 1000);
+    }, 500);
   }
 
-  /**
-   * Converts a Google sharing URL to an embeddable URL.
-   */
-  private getEmbeddableGoogleUrl(guide: GuideDocument): string {
-    const { url, fileType } = guide;
-
-    if (fileType === 'video') {
-      const regex = /drive\.google\.com.*\/d\/([a-zA-Z0-9_-]+)/;
-      const match = url.match(regex);
-      const fileId = match ? match[1] : null;
-      if (fileId) {
-        return `https://drive.google.com/file/d/${fileId}/embed`;
-      }
-    }
-
-    if (fileType === 'slide') {
-      const regex = /docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/;
-      const match = url.match(regex);
-      const fileId = match ? match[1] : null;
-      if (fileId) {
-        return `https://docs.google.com/presentation/d/${fileId}/embed?start=false&loop=false&delayms=3000`;
-      }
-    }
-
-    // Return original url if no conversion is applicable
-    return url;
-  }
 
   /**
    * Download PDF file
    */
   downloadFile(guide: GuideDocument): void {
-    if (!guide.url) {
+    const urlToDownload = guide.originalUrl || guide.url;
+    
+    if (!urlToDownload) {
       this.showErrorMessage('Không có file để tải xuống');
       return;
     }
@@ -162,7 +137,7 @@ export class GuideComponent implements OnInit, OnDestroy {
     try {
       // Tạo link download
       const link = document.createElement('a');
-      link.href = guide.url;
+      link.href = urlToDownload;
       link.download = guide.fileName || `${guide.title}.pdf`;
       link.target = '_blank';
       
@@ -180,14 +155,19 @@ export class GuideComponent implements OnInit, OnDestroy {
 
   /**
    * Open PDF in new tab
+   * Sử dụng originalUrl để mở URL gốc từ API
    */
   openInNewTab(guide: GuideDocument): void {
-    if (!guide.url) {
+    // Ưu tiên sử dụng originalUrl, fallback sang url
+    const urlToOpen = guide.originalUrl || guide.url;
+    
+    if (!urlToOpen) {
       this.showErrorMessage('Không có file để mở');
       return;
     }
-
-    window.open(guide.url, '_blank');
+    
+    console.log('Opening URL in new tab:', urlToOpen);
+    window.open(urlToOpen, '_blank');
   }
 
   /**

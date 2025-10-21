@@ -138,6 +138,18 @@
               <!-- Content Viewer -->
               <div class="content-viewer" *ngIf="showContentViewer && safeContentUrl && selectedGuide">
 
+                <!-- Google Drive Warning -->
+                <div class="drive-warning" *ngIf="selectedGuide.originalUrl?.includes('drive.google.com') || selectedGuide.url.includes('drive.google.com')">
+                  <mat-icon>info</mat-icon>
+                  <span>
+                    Google Drive có thể chặn hiển thị trực tiếp. 
+                    Nếu không xem được, vui lòng 
+                    <a [href]="selectedGuide.originalUrl || selectedGuide.url" target="_blank" rel="noopener noreferrer">
+                      <strong>nhấn vào đây để mở trong tab mới</strong>
+                    </a>
+                  </span>
+                </div>
+
                 <!-- Embedded Content Viewer -->
                 <div class="embedded-content-viewer">
                   <iframe [src]="safeContentUrl"
@@ -145,7 +157,8 @@
                           (load)="onContentLoadSuccess()"
                           (error)="onContentLoadError()"
                           frameborder="0"
-                          allowfullscreen>
+                          allowfullscreen
+                          sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
                     Trình duyệt của bạn không hỗ trợ iframe.
                   </iframe>
                 </div>
