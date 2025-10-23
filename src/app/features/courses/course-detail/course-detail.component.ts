@@ -21,6 +21,9 @@ import { LectureDetail, LecturePage, TraineeLectureDetail, LecturePageTrainee, S
 import { AuthenticationService } from '../../../core/guards/authentication.service';
 import { LoginDialogComponent } from '../../../components/login-dialog/login-dialog.component';
 import { CourseEnrollmentComponent } from '../course-enrollment/course-enrollment.component';
+import { ExamService } from '../services/exam.service';
+import { ExamConfirmDialogComponent, ExamConfirmData } from '../exam-confirm-dialog/exam-confirm-dialog.component';
+import { StatusExam, ExamData, ExamOfTrainee } from '../../../core/models/exam.model';
 
 
 @Component({
@@ -92,7 +95,8 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     private authenticationService: AuthenticationService,
     private sanitizer: DomSanitizer,
     private toast: ToastService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private examService: ExamService
   ) { }
 
   ngOnInit(): void {
@@ -1308,6 +1312,186 @@ export class CourseDetailComponent implements OnInit, OnDestroy {
     // Mở link PDF drive trong tab mới
     window.open(this.traineeLectureDetail.certification, '_blank');
     this.toast.success('Đang mở chứng chỉ...', 2000);
+  }
+
+  /**
+   * Check if can start exam (bao gồm thi lại)
+   */
+  canStartExam(): boolean {
+    if (!this.traineeLectureDetail) return false;
+    
+    // Ẩn nút thi lại nếu đã có chứng chỉ
+    if (this.traineeLectureDetail.certification || this.traineeLectureDetail.isCertified) {
+      return false;
+    }
+    
+    // Cho phép bắt đầu/tiếp tục/thi lại khi:
+    // - Đã hoàn thành học (chuẩn bị thi)
+    // - Đang thi dở
+    // - Đã hoàn thành thi (cho phép thi lại)
+    return (
+      this.traineeLectureDetail.statusLearn === StatusLearn.CompletedLearn || 
+      this.traineeLectureDetail.statusLearn === StatusLearn.InProgressExam ||
+      this.traineeLectureDetail.statusLearn === StatusLearn.CompletedExam
+    );
+  }
+
+  /**
+   * Get exam button text based on status
+   */
+  getExamButtonText(): string {
+    if (!this.traineeLectureDetail) return 'Bắt đầu thi';
+    
+    const statusLearn = this.traineeLectureDetail.statusLearn;
+    
+    if (statusLearn === StatusLearn.InProgressExam) {
+      return 'Tiếp tục thi';
+    } else if (statusLearn === StatusLearn.CompletedExam) {
+      return 'Thi lại';
+    } else {
+      return 'Bắt đầu thi';
+    }
+  }
+
+  /**
+   * Get exam button icon based on status
+   */
+  getExamButtonIcon(): string {
+    if (!this.traineeLectureDetail) return 'quiz';
+    
+    const statusLearn = this.traineeLectureDetail.statusLearn;
+    
+    if (statusLearn === StatusLearn.InProgressExam) {
+      return 'play_arrow';
+    } else if (statusLearn === StatusLearn.CompletedExam) {
+      return 'refresh';
+    } else {
+      return 'quiz';
+    }
+  }
+
+  /**
+   * Start exam
+   */
+  startExam(): void {
+    if (!this.traineeLectureDetail) {
+      this.showErrorMessage('Không tìm thấy thông tin khóa học');
+      return;
+    }
+    
+    console.log('Bắt đầu thi khóa học:', this.traineeLectureDetail);
+    
+    const statusLearn = this.traineeLectureDetail.statusLearn;
+    
+    // Nếu đang trong quá trình thi (statusLearn = 3) -> Tiếp tục thi
+    if (statusLearn === StatusLearn.InProgressExam) {
+      this.toast.info('Bạn đang có bài thi chưa hoàn thành. Tiếp tục thi...', 2000);
+      
+      // Điều hướng trực tiếp đến trang thi để tiếp tục
+      this.router.navigate(['/exam'], {
+        queryParams: { 
+          lectureId: this.traineeLectureDetail.lectureId,
+          continueExam: 'true'
+        }
+      });
+      return;
+    }
+    
+    // Lấy thông tin chi tiết exam để hiển thị dialog
+    this.examService.getExam(this.traineeLectureDetail.lectureId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.result === 1 && response.data) {
+            const examData = response.data;
+            
+            // Nếu statusLearn = 4 (CompletedExam) -> đây là thi lại
+            const isRetake = statusLearn === StatusLearn.CompletedExam;
+            
+            // Tính số lần đã thi từ listExamOfTrainee
+            const examList = examData.listExamOfTrainee || [];
+            const attemptNumber = examList.length > 0 
+              ? Math.max(...examList.map((e: ExamOfTrainee) => e.attemptNumber)) + 1
+              : 1;
+            
+            // Tìm điểm lần thi gần nhất
+            const latestAttempt = examList.length > 0 
+              ? examList.reduce((prev: ExamOfTrainee, current: ExamOfTrainee) => 
+                  (prev.attemptNumber > current.attemptNumber) ? prev : current
+                )
+              : null;
+            
+            let lastScore: number | undefined = latestAttempt?.score;
+            
+            // Nếu latestAttempt chưa có điểm, tìm attempt completed gần nhất
+            if (!lastScore && examList.length > 0) {
+              const completedAttempts = examList.filter((e: ExamOfTrainee) => 
+                e.statusExam === StatusExam.Completed && e.score !== undefined
+              );
+              if (completedAttempts.length > 0) {
+                const lastCompleted = completedAttempts.reduce((prev, current) => 
+                  (prev.attemptNumber > current.attemptNumber) ? prev : current
+                );
+                lastScore = lastCompleted.score;
+              }
+            }
+            
+            // Hiển thị dialog xác nhận
+            this.showExamConfirmDialog(
+              examData, 
+              isRetake, 
+              isRetake ? attemptNumber - 1 : 0,
+              lastScore
+            );
+            
+          } else {
+            this.toast.error(response.description || 'Không thể tải thông tin bài thi');
+          }
+        },
+        error: (error) => {
+          console.error('Lỗi khi tải thông tin bài thi:', error);
+          this.toast.error('Lỗi khi tải thông tin bài thi. Vui lòng thử lại.');
+        }
+      });
+  }
+
+  /**
+   * Show exam confirm dialog
+   */
+  private showExamConfirmDialog(
+    examData: ExamData, 
+    isRetake: boolean,
+    retakeCount: number,
+    lastScore?: number
+  ): void {
+    const dialogData: ExamConfirmData = {
+      courseName: this.traineeLectureDetail!.lecture.tittle,
+      timeOfExam: examData.timeOfExam,
+      numberQuestions: examData.numberQuestions,
+      minimumPercentageToComplete: examData.minimumPercentageToComplete,
+      isRetake: isRetake,
+      attemptNumber: retakeCount,
+      lastScore: lastScore
+    };
+    
+    const dialogRef = this.dialog.open(ExamConfirmDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: dialogData,
+      disableClose: true
+    });
+    
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        // Navigate to exam page
+        this.router.navigate(['/exam'], {
+          queryParams: { 
+            lectureId: this.traineeLectureDetail!.lectureId,
+            isRetake: isRetake ? 'true' : 'false'
+          }
+        });
+      }
+    });
   }
 }
 

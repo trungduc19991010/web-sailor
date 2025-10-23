@@ -327,10 +327,24 @@
                           </div>
                           <div class="flex-1">
                             <p class="text-sm font-semibold text-orange-800 leading-relaxed">
-                              Bạn đã hoàn thành nội dung khóa học, chọn <span class="text-orange-900 font-bold">“Hoàn thành”</span> để xác nhận
+                              Bạn đã hoàn thành nội dung khóa học, chọn <span class="text-orange-900 font-bold">"Hoàn thành"</span> để xác nhận
                             </p>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Nút Bắt đầu thi - Tab Tổng quan -->
+                    <div class="mt-6" *ngIf="canStartExam()">
+                      <div class="flex justify-center">
+                        <button 
+                          mat-raised-button 
+                          color="warn"
+                          (click)="startExam()"
+                          class="text-base px-6 py-2">
+                          <mat-icon class="mr-2">{{ getExamButtonIcon() }}</mat-icon>
+                          {{ getExamButtonText() }}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -342,7 +356,7 @@
                     <div class="p-1.5 bg-purple-100 rounded-lg">
                       <mat-icon class="text-purple-600 text-lg">menu_book</mat-icon>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-800">Nội dung khóa học</h3>
+                    <h3 class="text-lg font-bold text-gray-800">Tài liệu học tập</h3>
                     <div class="ml-auto px-2 py-0.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600">
                       {{ traineeLectureDetail.lecture.lecturePages.length }} tài liệu
                     </div>
@@ -352,7 +366,8 @@
                   <div class="space-y-2" *ngIf="traineeLectureDetail.lecture.lecturePages.length > 0">
                     <div 
                       *ngFor="let page of getSortedPages(); let i = index; trackBy: trackByPageId"
-                      class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                      class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                      (click)="viewLecturePage(page)">
                       
                       <!-- Page Number -->
                       <div class="flex-shrink-0">
@@ -654,10 +669,22 @@
                             </div>
                             <div class="flex-1">
                               <p class="text-sm font-semibold text-orange-800 leading-relaxed">
-                                Bạn đã hoàn thành nội dung khóa học, chọn <span class="text-orange-900 font-bold">“Hoàn thành”</span> để xác nhận
+                                Bạn đã hoàn thành nội dung khóa học, chọn <span class="text-orange-900 font-bold">"Hoàn thành"</span> để xác nhận
                               </p>
                             </div>
                           </div>
+                        </div>
+                        
+                        <!-- Nút Bắt đầu thi - Tab Tài liệu học tập -->
+                        <div class="flex justify-center mt-4" *ngIf="canStartExam()">
+                          <button 
+                            mat-raised-button 
+                            color="warn"
+                            (click)="startExam()"
+                            class="text-base px-6 py-2">
+                            <mat-icon class="mr-2">{{ getExamButtonIcon() }}</mat-icon>
+                            {{ getExamButtonText() }}
+                          </button>
                         </div>
                       </div>
                       
