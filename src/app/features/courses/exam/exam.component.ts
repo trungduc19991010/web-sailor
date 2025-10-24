@@ -105,8 +105,11 @@ export class ExamComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.loading = false;
         if (response.result === 1 && response.data) {
-          this.examData = response.data;
-          this.timeRemaining = response.data.timeOfExam;
+          // Sắp xếp câu hỏi theo số thứ tự (number) tăng dần
+          const sortedQuestions = [...(response.data.questions || [])]
+            .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+          this.examData = { ...response.data, questions: sortedQuestions };
+          this.timeRemaining = this.examData.timeOfExam;
           
           // Kiểm tra xem có exam InProgress không
           const continueExam = this.route.snapshot.queryParamMap.get('continueExam') === 'true';
@@ -153,8 +156,11 @@ export class ExamComponent implements OnInit, OnDestroy {
                   next: (refreshedResponse) => {
                     this.loading = false;
                     if (refreshedResponse.result === 1 && refreshedResponse.data) {
-                      this.examData = refreshedResponse.data;
-                      this.timeRemaining = refreshedResponse.data.timeOfExam;
+                      // Sắp xếp câu hỏi theo số thứ tự (number) tăng dần
+                      const sortedQuestions = [...(refreshedResponse.data.questions || [])]
+                        .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+                      this.examData = { ...refreshedResponse.data, questions: sortedQuestions };
+                      this.timeRemaining = this.examData.timeOfExam;
                       
                       // Bắt đầu timer
                       this.startTimer();
