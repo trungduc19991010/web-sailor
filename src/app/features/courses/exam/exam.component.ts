@@ -23,6 +23,7 @@ import {
   StatusExam,
   ExamOfTrainee
 } from '../../../core/models/exam.model';
+import { ExamSubmitConfirmDialogComponent, ExamSubmitConfirmData } from '../exam-submit-confirm-dialog/exam-submit-confirm-dialog.component';
 
 @Component({
   selector: 'app-exam',
@@ -355,24 +356,40 @@ export class ExamComponent implements OnInit, OnDestroy {
   submitExam(): void {
     if (!this.examData) return;
     
-    // Check if all questions are answered
+    // Prepare dialog data
     const unansweredCount = this.examData.questions.length - this.answeredQuestionsCount;
-    if (unansweredCount > 0) {
-      const confirmSubmit = confirm(
-        `Bạn còn ${unansweredCount} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?`
-      );
-      if (!confirmSubmit) return;
-    }
+    const dialogData: ExamSubmitConfirmData = {
+      totalQuestions: this.examData.questions.length,
+      answeredQuestions: this.answeredQuestionsCount,
+      unansweredQuestions: unansweredCount
+    };
     
-    this.finishExam();
+    // Show confirmation dialog
+    const dialogRef = this.dialog.open(ExamSubmitConfirmDialogComponent, {
+      width: '600px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: dialogData
+    });
+    
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.finishExam();
+      }
+    });
   }
 
   /**
    * Auto submit when time runs out
    */
   autoSubmit(): void {
-    this.toast.warning('Hết giờ! Tự động nộp bài...');
-    this.finishExam();
+    // Hiển thị thông báo hết giờ rõ ràng
+    this.toast.error('⏰ Hết giờ thi! Hệ thống đang tự động nộp bài của bạn...', 5000);
+    
+    // Đợi 1 giây để người dùng thấy thông báo
+    setTimeout(() => {
+      this.finishExam();
+    }, 1000);
   }
 
   /**
