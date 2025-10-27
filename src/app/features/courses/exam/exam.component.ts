@@ -110,16 +110,17 @@ export class ExamComponent implements OnInit, OnDestroy {
           const sortedQuestions = [...(response.data.questions || [])]
             .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
           this.examData = { ...response.data, questions: sortedQuestions };
-          this.timeRemaining = this.examData.timeOfExam;
           
           // Kiểm tra xem có exam InProgress không
           const continueExam = this.route.snapshot.queryParamMap.get('continueExam') === 'true';
           
           if (continueExam) {
-            // Tiếp tục thi: không gọi start-exam, chỉ bắt đầu timer
+            // Tiếp tục thi: Tính thời gian còn lại dựa trên timeStartExam
+            this.calculateRemainingTime();
             this.startTimer();
           } else {
-            // Thi lần đầu: gọi start-exam
+            // Thi lần đầu: Lấy thời gian gốc
+            this.timeRemaining = this.examData.timeOfExam;
             this.startExamSession();
           }
         } else {
@@ -161,7 +162,9 @@ export class ExamComponent implements OnInit, OnDestroy {
                       const sortedQuestions = [...(refreshedResponse.data.questions || [])]
                         .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
                       this.examData = { ...refreshedResponse.data, questions: sortedQuestions };
-                      this.timeRemaining = this.examData.timeOfExam;
+                      
+                      // Thi lại: Tính thời gian còn lại dựa trên timeStartExam mới
+                      this.calculateRemainingTime();
                       
                       // Bắt đầu timer
                       this.startTimer();
@@ -228,9 +231,64 @@ export class ExamComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Calculate remaining time based on timeStartExam
+   */
+  calculateRemainingTime(): void {
+    if (!this.examData) {
+      this.timeRemaining = 0;
+      return;
+    }
+    
+    // Tìm exam InProgress mới nhất
+    const examList = this.examData.listExamOfTrainee || [];
+    const inProgressExams = examList.filter((e: ExamOfTrainee) => e.statusExam === StatusExam.InProgress);
+    
+    if (inProgressExams.length > 0) {
+      // Lấy exam có timeStartExam mới nhất
+      const latestInProgress = inProgressExams.reduce((prev: ExamOfTrainee, current: ExamOfTrainee) => {
+        const prevTime = new Date(prev.timeStartExam).getTime();
+        const currentTime = new Date(current.timeStartExam).getTime();
+        return currentTime > prevTime ? current : prev;
+      });
+      
+      // Tính thời gian đã trôi qua (giây)
+      const startTime = new Date(latestInProgress.timeStartExam).getTime();
+      const currentTime = new Date().getTime();
+      const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
+      
+      // Thời gian còn lại = thời gian thi - thời gian đã trôi qua
+      this.timeRemaining = Math.max(0, this.examData.timeOfExam - elapsedSeconds);
+      
+      console.log('Calculate remaining time:', {
+        timeOfExam: this.examData.timeOfExam,
+        startTime: new Date(latestInProgress.timeStartExam),
+        currentTime: new Date(),
+        elapsedSeconds,
+        timeRemaining: this.timeRemaining
+      });
+      
+      // Nếu hết giờ thì tự động nộp
+      if (this.timeRemaining <= 0) {
+        this.toast.warning('Thời gian thi đã hết!');
+        setTimeout(() => {
+          this.autoSubmit();
+        }, 1000);
+      }
+    } else {
+      // Không có exam InProgress, lấy thời gian gốc
+      this.timeRemaining = this.examData.timeOfExam;
+    }
+  }
+
+  /**
    * Start countdown timer
    */
   startTimer(): void {
+    // Kiểm tra nếu thời gian <= 0 thì không bắt đầu timer
+    if (this.timeRemaining <= 0) {
+      return;
+    }
+    
     this.timerSubscription = interval(1000)
       .pipe(take(this.timeRemaining))
       .subscribe({
