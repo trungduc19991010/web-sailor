@@ -56,6 +56,11 @@ export class ExamComponent implements OnInit, OnDestroy {
   // Current question index
   currentQuestionIndex = 0;
   
+  // LocalStorage key for saving answers
+  private get storageKey(): string {
+    return `exam_answers_${this.lectureId}_${this.examData?.id || ''}`;
+  }
+  
   // Enum reference for template
   CorrectAnswerType = CorrectAnswerType;
   
@@ -111,6 +116,9 @@ export class ExamComponent implements OnInit, OnDestroy {
             .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
           this.examData = { ...response.data, questions: sortedQuestions };
           
+          // Load saved answers từ localStorage (nếu có)
+          this.loadSavedAnswers();
+          
           // Kiểm tra xem có exam InProgress không
           const continueExam = this.route.snapshot.queryParamMap.get('continueExam') === 'true';
           
@@ -162,6 +170,9 @@ export class ExamComponent implements OnInit, OnDestroy {
                       const sortedQuestions = [...(refreshedResponse.data.questions || [])]
                         .sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
                       this.examData = { ...refreshedResponse.data, questions: sortedQuestions };
+                      
+                      // Thi lại: Xóa đáp án cũ vì là lần thi mới
+                      this.clearSavedAnswers();
                       
                       // Thi lại: Tính thời gian còn lại dựa trên timeStartExam mới
                       this.calculateRemainingTime();
@@ -350,6 +361,7 @@ export class ExamComponent implements OnInit, OnDestroy {
    */
   selectSingleAnswer(questionId: string, answerId: string): void {
     this.userAnswers.set(questionId, new Set([answerId]));
+    this.saveAnswersToLocalStorage();
   }
 
   /**
@@ -366,6 +378,7 @@ export class ExamComponent implements OnInit, OnDestroy {
     } else {
       answers.add(answerId);
     }
+    this.saveAnswersToLocalStorage();
   }
 
   /**
@@ -391,6 +404,8 @@ export class ExamComponent implements OnInit, OnDestroy {
    */
   goToQuestion(index: number): void {
     this.currentQuestionIndex = index;
+    // Lưu vị trí câu hỏi hiện tại
+    this.saveAnswersToLocalStorage();
   }
 
   /**
@@ -529,6 +544,9 @@ export class ExamComponent implements OnInit, OnDestroy {
           });
           
           dialogRef.afterClosed().subscribe(result => {
+            // Xóa đáp án đã lưu sau khi nộp bài thành công
+            this.clearSavedAnswers();
+            
             if (result?.retake) {
               // Thi lại - reload trang với param isRetake
               this.router.navigate(['/exam'], {
@@ -554,5 +572,77 @@ export class ExamComponent implements OnInit, OnDestroy {
         this.toast.error('Lỗi khi nộp bài');
       }
     });
+  }
+  
+  /**
+   * Save answers to localStorage
+   */
+  private saveAnswersToLocalStorage(): void {
+    try {
+      const answersObject: { [key: string]: string[] } = {};
+      
+      // Convert Map<string, Set<string>> to plain object
+      this.userAnswers.forEach((answers, questionId) => {
+        answersObject[questionId] = Array.from(answers);
+      });
+      
+      const savedData = {
+        answers: answersObject,
+        savedAt: new Date().toISOString(),
+        currentQuestionIndex: this.currentQuestionIndex
+      };
+      
+      localStorage.setItem(this.storageKey, JSON.stringify(savedData));
+      console.log('✅ Đã lưu đáp án vào localStorage:', this.storageKey);
+    } catch (error) {
+      console.error('❌ Lỗi khi lưu đáp án vào localStorage:', error);
+    }
+  }
+  
+  /**
+   * Load saved answers from localStorage
+   */
+  private loadSavedAnswers(): void {
+    try {
+      const savedDataStr = localStorage.getItem(this.storageKey);
+      
+      if (savedDataStr) {
+        const savedData = JSON.parse(savedDataStr);
+        const answersObject = savedData.answers;
+        
+        // Convert plain object back to Map<string, Set<string>>
+        this.userAnswers.clear();
+        Object.keys(answersObject).forEach(questionId => {
+          this.userAnswers.set(questionId, new Set(answersObject[questionId]));
+        });
+        
+        // Restore current question index
+        if (savedData.currentQuestionIndex !== undefined) {
+          this.currentQuestionIndex = savedData.currentQuestionIndex;
+        }
+        
+        console.log('✅ Đã khôi phục đáp án từ localStorage:', {
+          totalAnswers: this.userAnswers.size,
+          savedAt: savedData.savedAt,
+          currentQuestion: this.currentQuestionIndex
+        });
+        
+        this.toast.info('Đã khôi phục đáp án trước đó', 3000);
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi load đáp án từ localStorage:', error);
+    }
+  }
+  
+  /**
+   * Clear saved answers from localStorage (khi nộp bài hoặc thi lại)
+   */
+  private clearSavedAnswers(): void {
+    try {
+      localStorage.removeItem(this.storageKey);
+      console.log('🗑️ Đã xóa đáp án đã lưu:', this.storageKey);
+    } catch (error) {
+      console.error('❌ Lỗi khi xóa đáp án:', error);
+    }
   }
 }
